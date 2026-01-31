@@ -9,7 +9,7 @@ import typing
 from commands2 import cmd, InstantCommand, RunCommand
 from commands2.button import CommandGenericHID
 from wpilib import XboxController, Servo
-from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d
+from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
 
 from commands.aimtodirection import AimToDirection
 from commands.trajectory import SwerveTrajectory, JerkyTrajectory
@@ -20,6 +20,7 @@ from subsystems.limelight_camera import LimelightCamera
 from subsystems.limelight_localizer import LimelightLocalizer
 
 from commands.reset_xy import ResetXY
+from subsystems.photon_tag_camera import PhotonTagCamera
 from subsystems.shooter import Shooter
 
 
@@ -41,18 +42,34 @@ class RobotContainer:
             shooterLocationOnDrivetrain=Translation2d(x=-0.2, y=0),
             goalIfBlue=Translation2d(x=4.59, y=4.025),
             goalIfRed=Translation2d(x=11.88, y=4.025),
+            minimumRangeMeters=2.0,
+            maximumRangeMeters=3.0,
         )
-
+        self.hoodServo = Servo(
+            channel=0
+        )
+        self.shooter = Shooter(
+            inverted= False,
+            hoodServo= self.hoodServo,
+        )
         self.limelightLocalizer = LimelightLocalizer(self.robotDrive)
 
+        self.lumaCamera = PhotonTagCamera("luma-front")
         self.centerCamera = LimelightCamera("limelight-center")
 
+        #self.limelightLocalizer.addCamera(
+        #    self.lumaCamera,
+        #    cameraPoseOnRobot=Translation3d(x=0.0, y=0.155, z=1.0),
+        #    cameraHeadingOnRobot=Rotation2d.fromDegrees(180.0),
+        #    cameraPitchAngleDegrees=0
+        #)
         self.limelightLocalizer.addCamera(
             self.centerCamera,
-            cameraPoseOnRobot=Translation3d(x=0.42 , y=-0.32, z=0.5),
+            cameraPoseOnRobot=Translation3d(x=0.4, y=-0.3, z=0.4),
             cameraHeadingOnRobot=Rotation2d.fromDegrees(0.0),
             cameraPitchAngleDegrees=30
         )
+        self.pickupCamera = LimelightCamera("limelight-aiming")
 
 
         # The driver's controller (joystick)
@@ -87,6 +104,21 @@ class RobotContainer:
         instantiating a :GenericHID or one of its subclasses (Joystick or XboxController),
         and then passing it to a JoystickButton.
         """
+        # example 1: hold the wheels in "swerve X brake" position, when "X" button is pressed
+        brakeCommand = RunCommand(self.robotDrive.setX, self.robotDrive)
+        xButton = self.driverController.button(XboxController.Button.kX)
+        xButton.whileTrue(brakeCommand)  # while "X" button is True (pressed), keep executing the brakeCommand
+
+        # example 2: when "POV-up" button pressed, reset robot field position to "facing North"
+        resetFacingNorthCommand = ResetXY(x=1.0, y=4.0, headingDegrees=0, drivetrain=self.robotDrive)
+        povUpButton = self.driverController.povUp()
+        povUpButton.whileTrue(resetFacingNorthCommand)
+
+        # example 3: when "POV-down" is pressed, reset robot field position to "facing South"
+        resetFacingSouthCommand = ResetXY(x=14.0, y=6.0, headingDegrees=180, drivetrain=self.robotDrive)
+        povDownButton = self.driverController.povDown()
+        povDownButton.whileTrue(resetFacingSouthCommand)
+
         from commands.point_towards_location import PointTowardsLocation
 
         # create a command for keeping the robot nose pointed towards the hub
@@ -103,42 +135,52 @@ class RobotContainer:
 
         # connect the command to its trigger
         whenRightTriggerPressed.whileTrue(keepPointingTowardsHub)
-
-        # example 1: hold the wheels in "swerve X brake" position, when "X" button is pressed
-        brakeCommand = RunCommand(self.robotDrive.setX, self.robotDrive)
-        xButton = self.driverController.button(XboxController.Button.kX)
-        xButton.whileTrue(brakeCommand)  # while "X" button is True (pressed), keep executing the brakeCommand
-
-        # example 2: when "POV-up" button pressed, reset robot field position to "facing North"
-        resetFacingNorthCommand = ResetXY(x=1.0, y=4.0, headingDegrees=0, drivetrain=self.robotDrive)
-        povUpButton = self.driverController.povUp()
-        povUpButton.whileTrue(resetFacingNorthCommand)
-
-        # example 3: when "POV-down" is pressed, reset robot field position to "facing South"
-        resetFacingSouthCommand = ResetXY(x=14.0, y=6.0, headingDegrees=180, drivetrain=self.robotDrive)
-        povDownButton = self.driverController.povDown()
-        povDownButton.whileTrue(resetFacingSouthCommand)
-
-        # example 4: robot drives this trajectory command when "A" button is pressed
-        trajectoryCommand1 = SwerveTrajectory(
-            drivetrain=self.robotDrive,
-            speed=+1.0,
-            waypoints=[
-                (1.0, 7.0, -54),  # start at left feeding station: x=1.0, y=7.0, heading=-54 degrees
-                (1.5, 6.5, 0),  # next waypoint
-                (2.0, 4.5, 0),  # next waypoint
-            ],
-            endpoint=(3.2, 4.0, 0),  # end point at the reef facing North
-            flipIfRed=False,  # if you want the trajectory to flip when team is red, set =True
-            stopAtEnd=True,  # to keep driving onto next command, set =False
+        from commands.shooting import GetInRange
+        from commands.shooting import GetReadyToShoot
+        getInRange = GetInRange(
+            goal=self.firingTable,
+            drivetrain=self.robotDrive
         )
-        aButton = self.driverController.button(XboxController.Button.kA)
-        aButton.whileTrue(trajectoryCommand1)  # while "A" button is pressed, keep running trajectoryCommand1
 
-        # example 5: and when "B" button is pressed, drive the reversed trajectory
-        reversedTrajectoryCommand1 = trajectoryCommand1.reversed()
-        bButton = self.driverController.button(XboxController.Button.kB)
-        bButton.whileTrue(reversedTrajectoryCommand1)  # while "B" button is pressed, keep running this command
+        getReady = GetReadyToShoot(
+            goal=self.firingTable,
+            shooter=self.shooter,
+            turret=None,
+            drivetrain=self.robotDrive  # if we have a turret, drivetrain=None (otherwise supply drivetrain=self.robotDrive)
+        )
+
+        self.driverController.button(XboxController.Button.kA).whileTrue(
+            getReady
+        )
+
+        from commands.drive_towards_object import SwerveTowardsObject
+
+        # create a command for driving towards one gamepiece, using existing Limelight camera and pipeline 1 inside it
+        driveToGamepiece = SwerveTowardsObject(
+            drivetrain=self.robotDrive,
+            speed=lambda: self.driverController.getRawAxis(XboxController.Axis.kLeftTrigger),
+            # speed controlled by "left trigger" stick of the joystick
+            maxLateralSpeed=1.0,
+            camera=self.pickupCamera,
+            cameraLocationOnRobot=Pose2d(x=+0.4, y=-0.2, rotation=Rotation2d.fromDegrees(0)),
+            # camera located at front-right and tilted 30 degrees to the left
+            cameraPipeline=0,  # if pipeline 1 in that camera is setup to do gamepiece detection
+            dontSwitchToSmallerObject=True,
+        )
+
+        # make a command to repeatedly drive to gamepieces (do it again after one gamepiece reached)
+        driveToManyGamepieces = driveToGamepiece.repeatedly()
+
+        # setup a condition for when to run that command
+        whenLeftTriggerPressed = self.driverController.axisGreaterThan(
+            XboxController.Axis.kLeftTrigger, threshold=0.1
+        )
+
+        whenLeftTriggerPressed.whileTrue(driveToManyGamepieces)
+
+
+
+
 
 
     def disablePIDSubsystems(self) -> None:
