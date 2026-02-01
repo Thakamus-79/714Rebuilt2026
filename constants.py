@@ -33,7 +33,7 @@ class DriveConstants:
     kMaxAngularSpeed = 2 * math.tau  # radians per second
 
     kMagnitudeSlewRate = 9.8  # m/s per second (1g acceleration allowed along X and along Y axis)
-    kRotationalSlewRate = 12.0  # rad/s per second
+    kRotationalSlewRate = 24.0  # rad/s per second
 
     # Chassis configuration
     kTrackWidth = units.inchesToMeters(26.5)
