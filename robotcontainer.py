@@ -57,15 +57,15 @@ class RobotContainer:
         self.lumaCamera = PhotonTagCamera("luma-front")
         self.centerCamera = LimelightCamera("limelight-center")
 
-        #self.limelightLocalizer.addCamera(
-        #    self.lumaCamera,
-        #    cameraPoseOnRobot=Translation3d(x=0.0, y=0.155, z=1.0),
-        #    cameraHeadingOnRobot=Rotation2d.fromDegrees(180.0),
-        #    cameraPitchAngleDegrees=0
-        #)
+        self.limelightLocalizer.addCamera(
+            self.lumaCamera,
+            cameraPoseOnRobot=Translation3d(x=0.0, y=0.0, z=0.0),  # Translation3d(x=0.0, y=0.155, z=1.0),
+            cameraHeadingOnRobot=Rotation2d.fromDegrees(180),
+            cameraPitchAngleDegrees=0
+        )
         self.limelightLocalizer.addCamera(
             self.centerCamera,
-            cameraPoseOnRobot=Translation3d(x=0.4, y=-0.3, z=0.4),
+            cameraPoseOnRobot=Translation3d(x=0.4, y=-0.3, z=0.5),
             cameraHeadingOnRobot=Rotation2d.fromDegrees(0.0),
             cameraPitchAngleDegrees=30
         )
