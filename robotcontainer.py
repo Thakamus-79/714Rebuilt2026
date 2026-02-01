@@ -143,7 +143,7 @@ class RobotContainer:
         )
 
         getReady = GetReadyToShoot(
-            goal=self.firingTable,
+            firingTable=self.firingTable,
             shooter=self.shooter,
             turret=None,
             drivetrain=self.robotDrive  # if we have a turret, drivetrain=None (otherwise supply drivetrain=self.robotDrive)
