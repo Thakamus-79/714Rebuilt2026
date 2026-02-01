@@ -65,18 +65,19 @@ class LimelightCamera(Subsystem):
         self.botPoseFlipped = self.table.getDoubleArrayTopic("botpose_orb_wpired").getEntry([])
 
 
-    def setCameraPoseOnRobot(self, x, y, z, pitch, roll, yaw):
+    def setCameraPoseOnRobot(self, x, y, z, pitchDegrees, rollDegrees, yawDegrees):
         """
         Only for localization: angles should be in degrees, xyz in meters
         """
         if self.cameraPoseSetRequest is not None:
-            self.cameraPoseSetRequest.set([x, -y, z, roll, pitch, yaw])
+            self.cameraPoseSetRequest.set([x, -y, z, pitchDegrees, rollDegrees, yawDegrees])
             self.imuModeRequest.set(0)  # TODO: try 4, this can be a better choice for Limelight 4
             # 0 - use external imu (the only option available on Limelight 3)
             # 1 - use external imu, seed internal imu
             # 2 - use internal
             # 3 - use internal with MT1 assisted convergence
             # 4 - use internal IMU with external IMU assisted convergence
+
 
     def updateRobotHeading(self, now: float, heading: Rotation2d):
         """
