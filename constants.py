@@ -58,7 +58,7 @@ class DriveConstants:
     kBackLeftChassisAngularOffset = math.pi
     kBackRightChassisAngularOffset = math.pi / 2
 
-    # MOTOR CAN IDs 1-7: this format
+    # MOTOR CAN IDs 1-8: this format
     kFrontLeftDrivingCanId = 1
     kRearLeftDrivingCanId = 2
     kFrontRightDrivingCanId = 3
