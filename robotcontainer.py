@@ -18,6 +18,7 @@ from subsystems.firing_table import FiringTable
 from subsystems.drivesubsystem import DriveSubsystem, BadSimPhysics
 from subsystems.limelight_camera import LimelightCamera
 from subsystems.limelight_localizer import LimelightLocalizer
+from subsystems.indexer import Indexer
 
 from commands.reset_xy import ResetXY
 from subsystems.photon_tag_camera import PhotonTagCamera
@@ -48,6 +49,9 @@ class RobotContainer:
         self.hoodServo = Servo(
             channel=0
         )
+        self.rightIndexer = Indexer(
+            leaderCanID=11, leaderInverted= False, followerCanID= 13, followerInverted= False
+        )
         self.shooter = Shooter(
             inverted= False,
             hoodServo= self.hoodServo,
@@ -63,12 +67,12 @@ class RobotContainer:
             cameraHeadingOnRobot=Rotation2d.fromDegrees(180),
             cameraPitchAngleDegrees=0
         )
-        self.limelightLocalizer.addCamera(
-            self.centerCamera,
-            cameraPoseOnRobot=Translation3d(x=0.4, y=-0.3, z=0.5),
-            cameraHeadingOnRobot=Rotation2d.fromDegrees(0.0),
-            cameraPitchAngleDegrees=30
-        )
+        # self.limelightLocalizer.addCamera(
+        #     self.centerCamera,
+        #     cameraPoseOnRobot=Translation3d(x=0.4, y=-0.3, z=0.5),
+        #     cameraHeadingOnRobot=Rotation2d.fromDegrees(0.0),
+        #     cameraPitchAngleDegrees=30
+        # )
         self.pickupCamera = LimelightCamera("limelight-aiming")
 
 
@@ -181,6 +185,8 @@ class RobotContainer:
         )
 
         whenLeftTriggerPressed.whileTrue(driveToManyGamepieces)
+
+
 
 
 

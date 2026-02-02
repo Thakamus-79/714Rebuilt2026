@@ -1,4 +1,5 @@
 from commands2 import Subsystem
+from phoenix6.hardware import CANrange
 from rev import SparkMax, SparkBase, SparkBaseConfig, ResetMode, PersistMode
 from wpilib import SmartDashboard
 
@@ -39,6 +40,8 @@ class Indexer(Subsystem):
         # 3. safe initial state
         self._setSpeed(0.0)
 
+        self.rangeFinder = CANrange(device_id=10)
+
 
     def feedGamepieceIntoShooter(self, speed=1.0):
         """
@@ -61,3 +64,8 @@ class Indexer(Subsystem):
     def _setSpeed(self, speed):
         self.motor.set(speed)
         SmartDashboard.putNumber("Indexer", speed)
+
+
+    def periodic(self) -> None:
+        SmartDashboard.putNumber("Indexer/distance", self.rangeFinder.get_distance().value)
+        SmartDashboard.putNumber("Indexer/distance_valid", self.rangeFinder.get_distance().status.value)
