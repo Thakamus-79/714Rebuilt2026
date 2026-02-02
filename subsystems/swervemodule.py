@@ -1,5 +1,6 @@
+from commands2 import Subsystem
 from phoenix6.configs import TalonFXConfiguration, CurrentLimitsConfigs
-from phoenix6.controls import VelocityVoltage
+from phoenix6.controls import VelocityVoltage, MotionMagicVelocityVoltage
 from phoenix6.hardware import TalonFX, CANcoder
 from phoenix6.signals import NeutralModeValue, InvertedValue
 from rev import SparkMax, SparkFlex, SparkLowLevel, SparkBase, SparkClosedLoopController, SparkRelativeEncoder, \
@@ -11,7 +12,7 @@ from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
 from constants import ModuleConstants, getSwerveDrivingMotorConfig, getSwerveTurningMotorConfig
 
 
-class SwerveModule:
+class SwerveModule(Subsystem):
     def __init__(
         self,
         drivingCANId: int,
@@ -25,6 +26,8 @@ class SwerveModule:
         """Constructs a swerve module using Rev (SparMax/SparkFlex) or Talon (Kraken) motor controllers.
         The driving motor can either be Rev or Kraken (set `drivingIsKraken=True` to enable Kraken).
         """
+        super().__init__()
+
         self.chassisAngularOffset = 0
         self.desiredState = SwerveModuleState(0.0, Rotation2d())
 
@@ -46,7 +49,7 @@ class SwerveModule:
 
         # -- is it Talon?
         self.drivingTalonMotor: TalonFX | None = None
-        self.drivingTalonVelocityRequest: VelocityVoltage | None = None
+        self.drivingTalonVelocityRequest: MotionMagicVelocityVoltage | None = None
         self.drivingTalonRotationsToMeters = (
             ModuleConstants.kWheelCircumferenceMeters / ModuleConstants.kDrivingMotorReduction
         )
@@ -64,9 +67,10 @@ class SwerveModule:
             config = TalonFXConfiguration()
             config.motor_output.neutral_mode = NeutralModeValue.BRAKE
             config.motor_output.inverted = InvertedValue.COUNTER_CLOCKWISE_POSITIVE
-            config.slot0.k_p = ModuleConstants.kDrivingP * 7.5
+            config.slot0.k_p = ModuleConstants.kDrivingP * 0.55
             config.slot0.k_i = 0
             config.slot0.k_d = 0
+            config.slot0.k_v = ModuleConstants.kDrivingFF * 0.55
             self.drivingTalonMotor.configurator.apply(config)
 
             current = CurrentLimitsConfigs()
@@ -76,7 +80,9 @@ class SwerveModule:
             current.supply_current_limit_enable = True
             self.drivingTalonMotor.configurator.apply(current)
 
-            self.drivingTalonVelocityRequest = VelocityVoltage(0, slot=0)
+            self.drivingTalonVelocityRequest = MotionMagicVelocityVoltage(
+                0, acceleration=500, slot=0
+            )
             self.drivingTalonMotor.set_position(0)
 
         else:
@@ -182,6 +188,7 @@ class SwerveModule:
             self.drivingTalonMotor.set_control(
                 self.drivingTalonVelocityRequest.with_velocity(rps)
             )
+            SmartDashboard.putNumber(f"Swerve{self.drivingCanId}/requested", rps)
 
         self.desiredState = desiredState
 
@@ -196,10 +203,15 @@ class SwerveModule:
             self.drivingTalonMotor.set_control(
                 self.drivingTalonVelocityRequest.with_velocity(0)
             )
+            SmartDashboard.putNumber(f"Swerve{self.drivingCanId}/requested", 0)
+
         self.turningPIDController.setReference(self.turningAbsEncoder.getPosition(), SparkLowLevel.ControlType.kPosition)
         if self.desiredState.speed != 0:
             self.desiredState = SwerveModuleState(speed=0, angle=self.desiredState.angle)
 
+    def periodic(self):
+        if self.drivingTalonMotor is not None:
+            SmartDashboard.putNumber(f"Swerve{self.drivingCanId}/actual", self.drivingTalonMotor.get_velocity().value)
 
     def resetEncoders(self) -> None:
         """
