@@ -5,14 +5,13 @@ from phoenix6.hardware import TalonFX, CANcoder
 from phoenix6.signals import NeutralModeValue, InvertedValue
 from rev import SparkMax, SparkFlex, SparkLowLevel, SparkBase, SparkClosedLoopController, SparkRelativeEncoder, \
     ResetMode, PersistMode
-from wpilib import SmartDashboard
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
 
 from constants import ModuleConstants, getSwerveDrivingMotorConfig, getSwerveTurningMotorConfig
 
 
-class SwerveModule(Subsystem):
+class SwerveModule:
     def __init__(
         self,
         drivingCANId: int,
@@ -26,7 +25,6 @@ class SwerveModule(Subsystem):
         """Constructs a swerve module using Rev (SparMax/SparkFlex) or Talon (Kraken) motor controllers.
         The driving motor can either be Rev or Kraken (set `drivingIsKraken=True` to enable Kraken).
         """
-        super().__init__()
 
         self.chassisAngularOffset = 0
         self.desiredState = SwerveModuleState(0.0, Rotation2d())
@@ -188,7 +186,6 @@ class SwerveModule(Subsystem):
             self.drivingTalonMotor.set_control(
                 self.drivingTalonVelocityRequest.with_velocity(rps)
             )
-            SmartDashboard.putNumber(f"Swerve{self.drivingCanId}/requested", rps)
 
         self.desiredState = desiredState
 
@@ -203,15 +200,11 @@ class SwerveModule(Subsystem):
             self.drivingTalonMotor.set_control(
                 self.drivingTalonVelocityRequest.with_velocity(0)
             )
-            SmartDashboard.putNumber(f"Swerve{self.drivingCanId}/requested", 0)
 
         self.turningPIDController.setReference(self.turningAbsEncoder.getPosition(), SparkLowLevel.ControlType.kPosition)
         if self.desiredState.speed != 0:
             self.desiredState = SwerveModuleState(speed=0, angle=self.desiredState.angle)
 
-    def periodic(self):
-        if self.drivingTalonMotor is not None:
-            SmartDashboard.putNumber(f"Swerve{self.drivingCanId}/actual", self.drivingTalonMotor.get_velocity().value)
 
     def resetEncoders(self) -> None:
         """
