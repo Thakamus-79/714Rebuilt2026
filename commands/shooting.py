@@ -15,7 +15,7 @@ from subsystems.turret import Turret
 
 class Constants:
     RPM_TOLERANCE_FACTOR = 0.03  # plus minus 3%
-    ANGLE_TOLERANCE_DEGREES = 5  # plus minus 5 degrees is fine for drivetrain aiming
+    ANGLE_TOLERANCE_DEGREES = 8  # plus minus 8 degrees is fine for drivetrain aiming
     RANGE_TOLERANCE_METERS = 0.1
 
 
