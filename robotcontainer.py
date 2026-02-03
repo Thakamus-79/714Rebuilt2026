@@ -94,7 +94,7 @@ class RobotContainer:
                 self.robotDrive,
                 forwardSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftY),
                 leftSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftX),
-                rotationSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kRightX),
+                rotationSpeed=lambda: -0.7 * self.driverController.getRawAxis(XboxController.Axis.kRightX),
                 fieldRelative=lambda: not fpvButton.getAsBoolean(),
                 deadband=OIConstants.kDriveDeadband,
                 rateLimit=True,
@@ -135,14 +135,21 @@ class RobotContainer:
             location=Translation2d(x=4.59, y=4.025),
             locationIfRed=Translation2d(x=11.88, y=4.025),
         )
-
-        # set up a condition for when to do this: do it when the joystick right trigger is pressed by more than 50%
         whenRightTriggerPressed = self.driverController.axisGreaterThan(
             XboxController.Axis.kRightTrigger, threshold=0.5
         )
-
-        # connect the command to its trigger
         whenRightTriggerPressed.whileTrue(keepPointingTowardsHub)
+        # ^^ set up a condition for when to do this: do it when the joystick right trigger is pressed by more than 50%
+
+        # create a command for keeping the robot nose pointed 45 degrees (for traversing the hump on a swerve drive)
+        keepNoseAt45Degrees = PointTowardsLocation(
+            drivetrain=self.robotDrive,
+            location=Translation2d(x=999999, y=999999),
+            locationIfRed=Translation2d(x=-999999, y=-999999),
+        )
+        self.driverController.button(XboxController.Button.kRightBumper).whileTrue(keepNoseAt45Degrees)
+        # ^^ set up a condition for when to do this: do it when the joystick right bumper is pressed
+
         from commands.shooting import GetInRange
         from commands.shooting import GetReadyToShoot
         getInRange = GetInRange(
