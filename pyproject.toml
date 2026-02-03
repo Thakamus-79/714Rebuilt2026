@@ -33,4 +33,5 @@ requires = [
     "robotpy-navx",
     "photonlibpy==2026.1.1rc3",
     "phoenix6",
+    "libgrapplefrc-py",
 ]

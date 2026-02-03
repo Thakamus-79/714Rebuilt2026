@@ -4,12 +4,10 @@
 # Open Source Software; you can modify and/or share it under the terms of
 # the WPILib BSD license file in the root directory of this project.
 #
-
+import logging
 import typing
 import commands2
-
 from robotcontainer import RobotContainer
-
 
 class MyRobot(commands2.TimedCommandRobot):
     """
@@ -25,6 +23,13 @@ class MyRobot(commands2.TimedCommandRobot):
         This function is run when the robot is first started up and should be used for any
         initialization code.
         """
+
+        # this is needed to be able to configure Grapple sensors (like Thrifty LaserCAN)
+        try:
+            from libgrapplefrc import can_bridge_tcp
+            can_bridge_tcp()
+        except Exception:
+            logging.exception("Failed to start GrappleHook daemon")
 
         # Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         # autonomous chooser on the dashboard.
