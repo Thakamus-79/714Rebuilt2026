@@ -150,23 +150,30 @@ class RobotContainer:
         self.driverController.button(XboxController.Button.kRightBumper).whileTrue(keepNoseAt45Degrees)
         # ^^ set up a condition for when to do this: do it when the joystick right bumper is pressed
 
-        from commands.shooting import GetInRange
-        from commands.shooting import GetReadyToShoot
-        getInRange = GetInRange(
-            goal=self.firingTable,
-            drivetrain=self.robotDrive
+        # from commands.shooting import GetInRange
+        # from commands.shooting import GetReadyToShoot
+        # getInRange = GetInRange(
+        #     goal=self.firingTable,
+        #     drivetrain=self.robotDrive
+        # )
+        # getReady = GetReadyToShoot(
+        #     firingTable=self.firingTable,
+        #     shooter=self.shooter,
+        #     turret=None,
+        #     drivetrain=self.robotDrive  # if we have a turret, drivetrain=None (otherwise supply drivetrain=self.robotDrive)
+        # )
+        #
+        # self.driverController.button(XboxController.Button.kA).whileTrue(
+        #     getReady
+        # )
+
+        self.driverController.button(XboxController.Button.kA).onTrue(
+            InstantCommand(lambda: self.shooter.setVelocityGoal(rpm=2000, rpmTolerance=200))
+        )
+        self.driverController.button(XboxController.Button.kA).onFalse(
+            InstantCommand(lambda: self.shooter.stop())
         )
 
-        getReady = GetReadyToShoot(
-            firingTable=self.firingTable,
-            shooter=self.shooter,
-            turret=None,
-            drivetrain=self.robotDrive  # if we have a turret, drivetrain=None (otherwise supply drivetrain=self.robotDrive)
-        )
-
-        self.driverController.button(XboxController.Button.kA).whileTrue(
-            getReady
-        )
 
         from commands.drive_towards_object import SwerveTowardsObject
 
