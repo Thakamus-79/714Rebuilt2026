@@ -15,6 +15,7 @@ from constants import LookupTable
 RECOMMENDED_SHOOTER_RPM_BY_DISTANCE = LookupTable({
     1.0 : 2000,  # if distance is 1m, spin at 2000 rpm
     2.0 : 3000,  # if distance is 2m, spin at 3000 rpm
+    2.74 : 4300,
     12.0 : 6000,  # if distance is 12m, spin at 6000 rpm
 })
 

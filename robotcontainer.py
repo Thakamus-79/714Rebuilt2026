@@ -67,13 +67,13 @@ class RobotContainer:
             cameraHeadingOnRobot=Rotation2d.fromDegrees(180),
             cameraPitchAngleDegrees=0
         )
-        # self.limelightLocalizer.addCamera(
-        #     self.centerCamera,
-        #     cameraPoseOnRobot=Translation3d(x=0.4, y=-0.3, z=0.5),
-        #     cameraHeadingOnRobot=Rotation2d.fromDegrees(0.0),
-        #     cameraPitchAngleDegrees=30
-        # )
-        self.pickupCamera = LimelightCamera("limelight-aiming")
+        self.limelightLocalizer.addCamera(
+            self.centerCamera,
+            cameraPoseOnRobot=Translation3d(x=0.4, y=-0.3, z=0.5),
+            cameraHeadingOnRobot=Rotation2d.fromDegrees(0.0),
+            cameraPitchAngleDegrees=30
+        )
+        self.pickupCamera = LimelightCamera("limelight-intake")
 
 
         # The driver's controller (joystick)

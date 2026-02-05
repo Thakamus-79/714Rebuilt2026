@@ -9,7 +9,7 @@ class ShooterConstants:
 
     maxRPM = 6000
     kFF = 18.5 / 10000
-    kP = 0.5 / 10000
+    kP = 5 / 10000
     kD = 0.0 / 10000
 
     stallCurrentLimit = 30  # amps, and it must be integer for Rev
