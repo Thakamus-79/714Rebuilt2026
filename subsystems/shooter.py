@@ -34,7 +34,8 @@ class Shooter(Subsystem):
 
         self.hoodServo = hoodServo
         # just in case the bounds were not set, set them
-        self.hoodServo.setBounds(2000, 1500, 1500, 1500, 1000)
+        if hasattr(hoodServo, "setBounds"):
+            self.hoodServo.setBounds(2000, 1500, 1500, 1500, 1000)
         self.hoodServoGoal = 0.0
         if hoodServo is not None:
             self.hoodServoGoal = hoodServo.get()
@@ -74,7 +75,7 @@ class Shooter(Subsystem):
             return ""  # shooter is ready
 
     def setHoodServoGoal(self, goal):
-        self.hoodServoGoal = max(0.0, min(1.0, goal))
+        #self.hoodServoGoal = max(0.0, min(1.0, goal))
         SmartDashboard.putNumber("Shooter/hoodServoGoal", goal)
         if self.hoodServo is not None:
             self.hoodServo.set(self.hoodServoGoal)

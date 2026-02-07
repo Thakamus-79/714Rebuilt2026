@@ -1,7 +1,7 @@
 # constants right here, to simplify
 from commands2 import Subsystem
 from rev import SparkBaseConfig, LimitSwitchConfig, SparkBase, SparkMax, SparkFlex, ResetMode, PersistMode, \
-    ClosedLoopConfig
+    ClosedLoopConfig, FeedbackSensor
 from wpilib import SmartDashboard
 
 
@@ -185,11 +185,16 @@ def _getLeadMotorConfig(
     config.limitSwitch.reverseLimitSwitchEnabled(True)
     config.limitSwitch.reverseLimitSwitchType(limitSwitchType)
     config.limitSwitch.forwardLimitSwitchEnabled(forwardLimitEnabled)
+
     if forwardLimitEnabled:
+        config.limitSwitch.forwardLimitSwitchEnabled(True)
         config.limitSwitch.forwardLimitSwitchType(limitSwitchType)
+    else:
+        config.limitSwitch.forwardLimitSwitchEnabled(False)
+
     config.encoder.positionConversionFactor(relPositionFactor)
     config.encoder.velocityConversionFactor(relPositionFactor / 60)  # 60 seconds per minute
-    config.closedLoop.setFeedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder)
+    config.closedLoop.setFeedbackSensor(FeedbackSensor.kPrimaryEncoder)
     config.closedLoop.pid(TurretConstants.kP, 0.0, TurretConstants.kD)
     config.closedLoop.velocityFF(0.0)
     config.closedLoop.outputRange(-TurretConstants.kMaxOutput, +TurretConstants.kMaxOutput)
