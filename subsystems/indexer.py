@@ -11,7 +11,7 @@ from wpilib import SmartDashboard
 
 
 SHOW_LASERCAN = False
-SHOW_CANRANGE = True
+SHOW_CANRANGE = False
 
 
 class Constants:
