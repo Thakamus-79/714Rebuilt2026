@@ -65,7 +65,6 @@ class Hood(Subsystem):
             leadMotorConfig,
             ResetMode.kResetSafeParameters,
             PersistMode.kPersistParameters)
-        self.motor.setInverted(Constants.motorInverted)
         self.motor.clearFaults()
 
         # initialize pid controller and encoder(s)
