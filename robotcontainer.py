@@ -8,6 +8,7 @@ import typing
 
 from commands2 import cmd, InstantCommand, RunCommand
 from commands2.button import CommandGenericHID
+from rev import SparkMax
 from wpilib import XboxController, Servo
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
 
@@ -23,7 +24,7 @@ from subsystems.indexer import Indexer
 from commands.reset_xy import ResetXY
 from subsystems.photon_tag_camera import PhotonTagCamera
 from subsystems.shooter import Shooter
-
+from subsystems.hood import Hood
 
 class RobotContainer:
     """
@@ -74,6 +75,8 @@ class RobotContainer:
             cameraPitchAngleDegrees=30
         )
         self.pickupCamera = LimelightCamera("limelight-intake")
+
+        self.hood = Hood(leadMotorCANId=43, motorClass= SparkMax)
 
 
         # The driver's controller (joystick)
@@ -199,6 +202,13 @@ class RobotContainer:
         )
 
         whenLeftTriggerPressed.whileTrue(driveToManyGamepieces)
+
+        self.driverController.button(XboxController.Button.kA).whileTrue(
+            # will this make the hood go towards its zero, until it hits it and hits max current?
+            RunCommand(lambda: self.hood.drive(speed=-0.1), self.hood)
+        ).onFalse(
+            InstantCommand(lambda: self.hood.stopAndReset(), self.hood)
+        )
 
 
 

@@ -7,12 +7,12 @@ from wpilib import SmartDashboard
 
 class Constants:
     # other settings
-    motorInverted = True
+    motorInverted = False
     findingZeroSpeed = 0.1
     findingZeroCurrentLimit = 10
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
-    calibrating = False
+    calibrating = True
 
     # to calibrate, set calibrating = True above, and add this at the end of configureButtonBindings(...) in robotcontainer.py
     # self.driverController.button(XboxController.Button.kA).whileTrue(
@@ -36,7 +36,7 @@ class Constants:
     kD = 0.0  # at first start from zero, and when you know your kP you can start increasing kD from some small value >0
     kMaxOutput = 1.0
 
-    stallCurrentLimit = 5  # amps, must be integer for Rev
+    stallCurrentLimit = 20  # amps, must be integer for Rev
     freeSpinCurrentLimit = 20  # amps, must be integer for Rev
 
 
@@ -67,6 +67,7 @@ class Hood(Subsystem):
             leadMotorConfig,
             ResetMode.kResetSafeParameters,
             PersistMode.kPersistParameters)
+        self.motor.clearFaults()
 
         # initialize pid controller and encoder(s)
         self.pidController = None
@@ -152,10 +153,6 @@ class Hood(Subsystem):
 
 
     def getState(self) -> str:
-        if self.forwardLimit.get():
-            return "fwdLimit" if not self.reverseLimit.get() else "both limits (CAN disconn?)"
-        if self.reverseLimit.get():
-            return "revLimit" if self.forwardLimit is not None else "revLimit or CAN disconn"
         if not self.zeroFound:
             return "finding"
         # otherwise, everything is ok
@@ -168,7 +165,7 @@ class Hood(Subsystem):
             self.findZero()
         # 2. report to the dashboard
         SmartDashboard.putString("Hood/state", self.getState())
-        SmartDashboard.putString("Hood/current", self.motor.getOutputCurrent())
+        SmartDashboard.putNumber("Hood/current", self.motor.getOutputCurrent())
         SmartDashboard.putNumber("Hood/goal", self.getPositionGoal())
         SmartDashboard.putNumber("Hood/pos", self.getPosition())
 
