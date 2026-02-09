@@ -9,7 +9,8 @@ class Constants:
     # other settings
     motorInverted = False
     findingZeroSpeed = 0.1
-    findingZeroCurrentLimit = 10
+    stallCurrentLimit = 20  # amps (must be an integer for Rev)
+    findingZeroCurrentLimit = stallCurrentLimit * 0.7
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
     calibrating = True
@@ -35,9 +36,6 @@ class Constants:
     kP = 0.02  # at first make it very small like this, then start tuning by increasing from there
     kD = 0.0  # at first start from zero, and when you know your kP you can start increasing kD from some small value >0
     kMaxOutput = 1.0
-
-    stallCurrentLimit = 20  # amps, must be integer for Rev
-    freeSpinCurrentLimit = 20  # amps, must be integer for Rev
 
 
 class Hood(Subsystem):
@@ -67,6 +65,7 @@ class Hood(Subsystem):
             leadMotorConfig,
             ResetMode.kResetSafeParameters,
             PersistMode.kPersistParameters)
+        self.motor.setInverted(Constants.motorInverted)
         self.motor.clearFaults()
 
         # initialize pid controller and encoder(s)
@@ -175,7 +174,6 @@ def _getLeadMotorConfig(
     relPositionFactor: float
 ) -> SparkBaseConfig:
     config = SparkBaseConfig()
-    config.inverted(inverted)
     config.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
     config.limitSwitch.reverseLimitSwitchEnabled(False)
     config.limitSwitch.forwardLimitSwitchEnabled(False)
@@ -186,4 +184,5 @@ def _getLeadMotorConfig(
     config.closedLoop.velocityFF(0.0)
     config.closedLoop.outputRange(-Constants.kMaxOutput, +Constants.kMaxOutput)
     config.smartCurrentLimit(Constants.stallCurrentLimit)
+    config.inverted(inverted)
     return config
