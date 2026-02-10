@@ -24,7 +24,7 @@ from subsystems.indexer import Indexer
 from commands.reset_xy import ResetXY
 from subsystems.photon_tag_camera import PhotonTagCamera
 from subsystems.shooter import Shooter
-from subsystems.hood import Hood
+from subsystems.turret import Turret
 
 class RobotContainer:
     """
@@ -76,7 +76,7 @@ class RobotContainer:
         )
         self.pickupCamera = LimelightCamera("limelight-intake")
 
-        self.hood = Hood(leadMotorCANId=43, motorClass= SparkMax)
+        self.hood = Turret(leadMotorCANId=43, motorClass= SparkMax)
 
 
         # The driver's controller (joystick)
