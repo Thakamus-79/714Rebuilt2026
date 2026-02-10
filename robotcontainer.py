@@ -205,16 +205,21 @@ class RobotContainer:
 
         self.driverController.button(XboxController.Button.kA).whileTrue(
             # will this make the hood go towards its zero, until it hits it and hits max current?
-            RunCommand(lambda: self.hood.drive(speed=-0.1), self.hood)
+            RunCommand(lambda: self.hood.setPositionGoal(-1.0), self.hood)
         ).onFalse(
             InstantCommand(lambda: self.hood.stopAndReset(), self.hood)
         )
 
+        self.driverController.button(XboxController.Button.kB).whileTrue(
+            # will this make the hood go towards its zero, until it hits it and hits max current?
+            RunCommand(lambda: self.hood.setPositionGoal(-4.0), self.hood)
+        ).onFalse(
+            InstantCommand(lambda: self.hood.stopAndReset(), self.hood)
+        )
 
-
-
-
-
+        self.driverController.button(XboxController.Button.kX).whileTrue(
+            InstantCommand(lambda: self.hood.forgetZero(), self.hood)
+        )
 
 
     def disablePIDSubsystems(self) -> None:

@@ -8,12 +8,12 @@ from wpilib import SmartDashboard
 class Constants:
     # other settings
     motorInverted = False
-    findingZeroSpeed = 0.1
+    findingZeroSpeed = 0.07
     stallCurrentLimit = 20  # amps (must be an integer for Rev)
     findingZeroCurrentLimit = stallCurrentLimit * 0.7
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
-    calibrating = True
+    calibrating = False
 
     # to calibrate, set calibrating = True above, and add this at the end of configureButtonBindings(...) in robotcontainer.py
     # self.driverController.button(XboxController.Button.kA).whileTrue(
@@ -34,7 +34,7 @@ class Constants:
     positionTolerance = 0.0625  # motor revolutions
 
     # PID configuration (after you are done with calibrating=True)
-    kP = 0.0002  # at first make it very small like this, then start tuning by increasing from there
+    kP = 0.4  # at first make it very small like this, then start tuning by increasing from there
     kD = 0.0  # at first start from zero, and when you know your kP you can start increasing kD from some small value >0
     kMaxOutput = 1.0
 
@@ -74,6 +74,12 @@ class Hood(Subsystem):
 
         # set the initial hood goal to be the minimum
         self.setPositionGoal(Constants.initialPositionGoal)
+
+
+    def forgetZero(self):
+        self.zeroFound = False
+        self.pidController = None
+        self.stopAndReset()
 
 
     def notReady(self) -> str:
