@@ -9,7 +9,7 @@ from wpimath.filter import SlewRateLimiter
 class Constants:
     # other settings
     motorInverted = False
-    findingZeroSpeed = 0.07
+    findingZeroSpeed = 0.14
     stallCurrentLimit = 20  # amps (must be an integer for Rev)
     findingZeroCurrentLimit = stallCurrentLimit * 0.7
 
@@ -74,7 +74,7 @@ class Hood(Subsystem):
         self.relativeEncoder = self.motor.getEncoder()  # this encoder can be used instead of absolute, if you know!
 
         # the logic of finding the zero needs to be a little smooth
-        self.findingZeroRateLimiter = SlewRateLimiter(rateLimit=0.1 * Constants.findingZeroSpeed)
+        self.findingZeroRateLimiter = SlewRateLimiter(rateLimit=1.0 * Constants.findingZeroSpeed)
         self.findingZeroRateLimiter.reset(0.0)
 
         # set the initial hood goal to be the minimum
