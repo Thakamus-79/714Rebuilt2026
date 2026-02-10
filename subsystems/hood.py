@@ -28,12 +28,13 @@ class Constants:
     # (set findingZeroCurrentLimit to half of that value, set calibrating=False and your hood is ready)
 
     # which range of motion we want from this hood?
-    minPosition = 1.0  # motor revolutions
-    maxPosition = 10.0  # motor revolutions
-    positionTolerance = 0.25  # motor revolutions
+    minPosition = -8.0  # motor revolutions
+    maxPosition = -0.5  # motor revolutions
+    initialPositionGoal = maxPosition   # closest to zero (out of the two)
+    positionTolerance = 0.0625  # motor revolutions
 
     # PID configuration (after you are done with calibrating=True)
-    kP = 0.02  # at first make it very small like this, then start tuning by increasing from there
+    kP = 0.0002  # at first make it very small like this, then start tuning by increasing from there
     kD = 0.0  # at first start from zero, and when you know your kP you can start increasing kD from some small value >0
     kMaxOutput = 1.0
 
@@ -72,7 +73,7 @@ class Hood(Subsystem):
         self.relativeEncoder = self.motor.getEncoder()  # this encoder can be used instead of absolute, if you know!
 
         # set the initial hood goal to be the minimum
-        self.setPositionGoal(Constants.minPosition)
+        self.setPositionGoal(Constants.initialPositionGoal)
 
 
     def notReady(self) -> str:
@@ -144,10 +145,10 @@ class Hood(Subsystem):
             self.stopAndReset()  # because the zero is found
             self.relativeEncoder.setPosition(0.0)  # found the zero position
             self.pidController = self.motor.getClosedLoopController()
-            self.setPositionGoal(Constants.minPosition)
+            self.setPositionGoal(Constants.initialPositionGoal)
             return
         # otherwise, continue finding it
-        self.motor.set(-Constants.findingZeroSpeed)
+        self.motor.set(Constants.findingZeroSpeed)
 
 
     def getState(self) -> str:
