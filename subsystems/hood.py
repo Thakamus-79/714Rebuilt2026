@@ -2,7 +2,8 @@
 from commands2 import Subsystem
 from rev import SparkBaseConfig, LimitSwitchConfig, SparkBase, SparkMax, ResetMode, PersistMode, ClosedLoopConfig, \
     FeedbackSensor
-from wpilib import SmartDashboard
+from wpilib import SmartDashboard, RobotState
+from wpimath.filter import SlewRateLimiter
 
 
 class Constants:
@@ -72,6 +73,10 @@ class Hood(Subsystem):
         self.pidController = None
         self.relativeEncoder = self.motor.getEncoder()  # this encoder can be used instead of absolute, if you know!
 
+        # the logic of finding the zero needs to be a little smooth
+        self.findingZeroRateLimiter = SlewRateLimiter(rateLimit=0.1 * Constants.findingZeroSpeed)
+        self.findingZeroRateLimiter.reset(0.0)
+
         # set the initial hood goal to be the minimum
         self.setPositionGoal(Constants.initialPositionGoal)
 
@@ -136,6 +141,7 @@ class Hood(Subsystem):
     def stopAndReset(self) -> None:
         self.motor.stopMotor()
         self.motor.clearFaults()
+        self.findingZeroRateLimiter.reset(0.0)
 
 
     def findZero(self):
@@ -154,7 +160,14 @@ class Hood(Subsystem):
             self.setPositionGoal(Constants.initialPositionGoal)
             return
         # otherwise, continue finding it
-        self.motor.set(Constants.findingZeroSpeed)
+        if RobotState.isEnabled():
+            speed = self.findingZeroRateLimiter.calculate(Constants.findingZeroSpeed)
+            SmartDashboard.putNumber("Hood/findingSpeed", speed)
+            self.motor.set(speed)
+        else:
+            self.findingZeroRateLimiter.reset(0.0)
+            SmartDashboard.putNumber("Hood/findingSpeed", 0.0)
+            self.motor.set(0)
 
 
     def getState(self) -> str:
