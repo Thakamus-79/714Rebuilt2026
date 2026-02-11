@@ -8,7 +8,6 @@ from wpimath.filter import SlewRateLimiter
 
 class Constants:
     # other settings
-    motorInverted = False
     findingZeroSpeed = 0.14
     stallCurrentLimit = 12  # amps (must be an integer for Rev)
     findingZeroCurrentLimit = stallCurrentLimit * 0.7
@@ -45,6 +44,7 @@ class Constants:
     kDegreesPerRotation = (maxPositionDegrees - minPositionDegrees) / (maxPosition - minPosition)
     kRotationsPerDegree = (maxPosition - minPosition) / (maxPositionDegrees - minPositionDegrees)
     initialPositionGoal = maxPosition if abs(maxPosition) < abs(minPosition) else minPosition   # closest to zero
+    sign = +1 if maxPositionDegrees > minPositionDegrees else -1
 
 
 assert Constants.minPositionDegrees != Constants.maxPositionDegrees
@@ -73,7 +73,7 @@ class Turret(Subsystem):
             leadMotorCANId, SparkBase.MotorType.kBrushless
         )
         leadMotorConfig = _getLeadMotorConfig(
-            inverted=Constants.motorInverted,
+            inverted=False,
             relPositionFactor=1.0,
         )
         self.motor.configure(
@@ -230,5 +230,11 @@ def _getLeadMotorConfig(
 def toDegrees(rotations):
     return Constants.minPositionDegrees + (rotations - Constants.minPosition) * Constants.kDegreesPerRotation
 
+
 def toRotations(degrees):
-    return Constants.minPosition + ((degrees - Constants.minPositionDegrees) % 360) * Constants.kRotationsPerDegree
+    degreesAwayFromMin = (degrees - Constants.minPositionDegrees) * Constants.sign
+
+    # if we want to turn +380 degrees, it's same thing as +20 => use the modulo (%) to get the +20 out of +380
+    degreesAwayFromMin = degreesAwayFromMin % 360  # this also works if you want -10 degrees: (-10) % 360 = 350
+
+    return Constants.minPosition + degreesAwayFromMin * Constants.sign * Constants.kRotationsPerDegree
