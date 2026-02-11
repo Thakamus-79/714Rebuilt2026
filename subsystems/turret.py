@@ -31,13 +31,26 @@ class Constants:
     # which range of motion we want from this hood?
     minPosition = -8.0  # motor revolutions
     maxPosition = -0.5  # motor revolutions
-    initialPositionGoal = maxPosition   # closest to zero (out of the two)
     positionTolerance = 0.0625  # motor revolutions
+
+    # calibrated angles:
+    minPositionDegrees = -20  # how many degrees is the shooter's heading when turret is @ minPosition?
+    maxPositionDegrees = 320  # how many degrees is the shooter's heading when turret is @ maxPosition
 
     # PID configuration (after you are done with calibrating=True)
     kP = 0.4  # at first make it very small like this, then start tuning by increasing from there
     kD = 0.0  # at first start from zero, and when you know your kP you can start increasing kD from some small value >0
     kMaxOutput = 1.0
+
+    kDegreesPerRotation = (maxPositionDegrees - minPositionDegrees) / (maxPosition - minPosition)
+    kRotationsPerDegree = (maxPosition - minPosition) / (maxPositionDegrees - minPositionDegrees)
+    initialPositionGoal = maxPosition if abs(maxPosition) < abs(minPosition) else minPosition   # closest to zero
+
+
+assert Constants.minPositionDegrees != Constants.maxPositionDegrees
+assert abs(Constants.minPositionDegrees - Constants.maxPositionDegrees) < 360, "turret range of motion cannot be 360 or more degrees"
+assert Constants.minPosition < Constants.maxPosition
+assert Constants.maxPosition < 0 or Constants.minPosition > 0, "min/max position should either be both positive or both negative"
 
 
 class Turret(Subsystem):
@@ -96,8 +109,13 @@ class Turret(Subsystem):
             return ""
 
 
-    def set(self, goal: float):
-        self.setPositionGoal(goal)
+    def setAngleGoal(self, goalDegrees: float):
+        goalRotations = toRotations(goalDegrees)
+        # only set the rotation goal if it is between minimum and maximum allowed (otherwise stop and wait)
+        if Constants.minPosition < goalRotations < Constants.maxPosition:
+            self.setPositionGoal(goalRotations)
+        else:
+            self.stopAndReset()
 
 
     def setPositionGoal(self, goal: float) -> None:
@@ -186,6 +204,8 @@ class Turret(Subsystem):
         SmartDashboard.putNumber("Turret/current", self.motor.getOutputCurrent())
         SmartDashboard.putNumber("Turret/goal", self.getPositionGoal())
         SmartDashboard.putNumber("Turret/pos", self.getPosition())
+        SmartDashboard.putNumber("Turret/degreesGoal", toDegrees(self.getPositionGoal()))
+        SmartDashboard.putNumber("Turret/degreesPos", toDegrees(self.getPosition()))
 
 
 def _getLeadMotorConfig(
@@ -205,3 +225,10 @@ def _getLeadMotorConfig(
     config.smartCurrentLimit(Constants.stallCurrentLimit)
     config.inverted(inverted)
     return config
+
+
+def toDegrees(rotations):
+    return Constants.minPositionDegrees + (rotations - Constants.minPosition) * Constants.kDegreesPerRotation
+
+def toRotations(degrees):
+    return Constants.minPosition + ((degrees - Constants.minPositionDegrees) % 360) * Constants.kRotationsPerDegree

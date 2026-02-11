@@ -164,7 +164,7 @@ class GetReadyToShoot(commands2.Command):
         if self.turret is not None:
             direction = self.firingTable.recommendedTurretDirection()
             if direction is not None:
-                self.turret.setPositionGoal(direction.degrees())
+                self.turret.setAngleGoal(direction.degrees())
 
         # if we are not aiming with a turret, we can aim with drivetrain
         elif self.drivetrain is not None:
