@@ -40,7 +40,7 @@ class Constants:
     kMaxOutput = 1.0
 
 
-class Turret(Subsystem):
+class Hood(Subsystem):
     def __init__(
         self,
         leadMotorCANId: int,
@@ -89,9 +89,9 @@ class Turret(Subsystem):
 
     def notReady(self) -> str:
         if not self.zeroFound:
-            return "turret zero not found"
+            return "hood zero not found"
         elif abs(self.positionGoal - self.getPosition()) > Constants.positionTolerance:
-            return "turret not at target angle"
+            return "hood not at target angle"
         else:
             return ""
 
@@ -162,11 +162,11 @@ class Turret(Subsystem):
         # otherwise, continue finding it
         if RobotState.isEnabled():
             speed = self.findingZeroRateLimiter.calculate(Constants.findingZeroSpeed)
-            SmartDashboard.putNumber("Turret/findingSpeed", speed)
+            SmartDashboard.putNumber("Hood/findingSpeed", speed)
             self.motor.set(speed)
         else:
             self.findingZeroRateLimiter.reset(0.0)
-            SmartDashboard.putNumber("Turret/findingSpeed", 0.0)
+            SmartDashboard.putNumber("Hood/findingSpeed", 0.0)
             self.motor.set(0)
 
 
@@ -182,10 +182,10 @@ class Turret(Subsystem):
         if not self.zeroFound:
             self.findZero()
         # 2. report to the dashboard
-        SmartDashboard.putString("Turret/state", self.getState())
-        SmartDashboard.putNumber("Turret/current", self.motor.getOutputCurrent())
-        SmartDashboard.putNumber("Turret/goal", self.getPositionGoal())
-        SmartDashboard.putNumber("Turret/pos", self.getPosition())
+        SmartDashboard.putString("Hood/state", self.getState())
+        SmartDashboard.putNumber("Hood/current", self.motor.getOutputCurrent())
+        SmartDashboard.putNumber("Hood/goal", self.getPositionGoal())
+        SmartDashboard.putNumber("Hood/pos", self.getPosition())
 
 
 def _getLeadMotorConfig(
