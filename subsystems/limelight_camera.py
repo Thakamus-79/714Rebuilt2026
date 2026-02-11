@@ -6,9 +6,9 @@
 #
 from typing import Tuple
 
-from wpilib import Timer, SmartDashboard
+from wpilib import Timer, SmartDashboard, RobotController
 from commands2 import Subsystem
-from ntcore import NetworkTableInstance
+from ntcore import NetworkTableInstance, StringArrayTopic, StringTopic
 from wpimath.geometry import Rotation2d
 from wpinet import PortForwarder
 
@@ -48,11 +48,26 @@ class LimelightCamera(Subsystem):
         self.localizerSubscribed = False
         self.cameraPoseSetRequest, self.robotOrientationSetRequest, self.imuModeRequest = None, None, None
 
-        # port forwarding in case this is connected over USB
+        # port forwarding and feed address overrides, in case this camera is connected over USB
         self.isUsb0 = isUsb0
+        self.ntSource: StringTopic | None = None
+        self.ntStreams: StringArrayTopic | None = None
+        self.ntStreamsValue, self.ntSourceValue = None, None
         if isUsb0:
-            for port in [1180, 5800, 5801, 5802, 5803, 5804, 5805, 5806, 5807, 5808, 5809]:
-                PortForwarder.getInstance().add(port, "172.29.0.1", port)
+            self.setupCameraAtUsb0(instance)
+
+
+    def setupCameraAtUsb0(self, instance: NetworkTableInstance | None):
+        for port in [1180, 5800, 5801, 5802, 5803, 5804, 5805, 5806, 5807, 5808, 5809]:
+            PortForwarder.getInstance().add(port, "172.29.0.1", port)
+        teamNumber = RobotController.getTeamNumber()
+        feedUrl = f"http://10.{teamNumber // 100}.{teamNumber // 100}.2:5800"
+        publishedStreamInfo = instance.getTable("CameraPublisher").getSubTable(self.cameraName)
+        self.ntStreams = publishedStreamInfo.getStringArrayTopic("streams").publish()
+        self.ntStreamsValue = [f"mjpeg:{feedUrl}"]
+        self.ntSource = publishedStreamInfo.getStringTopic("source").publish()
+        self.ntSourceValue = f"ip:{feedUrl}"
+
 
     def addLocalizer(self):
         if self.localizerSubscribed:
@@ -135,16 +150,9 @@ class LimelightCamera(Subsystem):
 
     def periodic(self) -> None:
         if self.isUsb0:
-            instance = NetworkTableInstance.getDefault()
-
-            # Override with our camera feed address
-            streams = instance.getTable("CameraPublisher").getSubTable(
-                self.cameraName).getStringArrayTopic("streams").publish()
-            streams.set(["mjpeg:http://10.7.14.2:5800"])
-
-            source = instance.getTable("CameraPublisher").getSubTable(
-                self.cameraName).getStringTopic("source").publish()
-            source.set("ip:http://10.7.14.2:5800")
+            # keep overriding the feed info with the forwarded camera feed address
+            self.ntStreams.set(self.ntStreamsValue)
+            self.ntSource.set(self.ntSourceValue)
 
         now = Timer.getFPGATimestamp()
         heartbeat = self.getHB()
