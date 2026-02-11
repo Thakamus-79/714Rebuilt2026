@@ -62,6 +62,7 @@ class RobotContainer:
 
         self.lumaCamera = PhotonTagCamera("luma-front")
         self.centerCamera = LimelightCamera("limelight-center")
+        self.limelightthreea = LimelightCamera("limelight-three", isUsb0=True)
 
         self.limelightLocalizer.addCamera(
             self.lumaCamera,
@@ -78,6 +79,7 @@ class RobotContainer:
         self.pickupCamera = LimelightCamera("limelight-intake")
 
         self.hood = Hood(leadMotorCANId=43, motorClass= SparkMax)
+
 
 
 

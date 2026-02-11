@@ -49,10 +49,10 @@ class LimelightCamera(Subsystem):
         self.cameraPoseSetRequest, self.robotOrientationSetRequest, self.imuModeRequest = None, None, None
 
         # port forwarding in case this is connected over USB
+        self.isUsb0 = isUsb0
         if isUsb0:
             for port in [1180, 5800, 5801, 5802, 5803, 5804, 5805, 5806, 5807, 5808, 5809]:
                 PortForwarder.getInstance().add(port, "172.29.0.1", port)
-
 
     def addLocalizer(self):
         if self.localizerSubscribed:
@@ -134,6 +134,18 @@ class LimelightCamera(Subsystem):
         return Timer.getFPGATimestamp() - self.lastHeartbeatTime
 
     def periodic(self) -> None:
+        if self.isUsb0:
+            instance = NetworkTableInstance.getDefault()
+
+            # Override with our camera feed address
+            streams = instance.getTable("CameraPublisher").getSubTable(
+                self.cameraName).getStringArrayTopic("streams").publish()
+            streams.set(["mjpeg:http://10.7.14.2:5800"])
+
+            source = instance.getTable("CameraPublisher").getSubTable(
+                self.cameraName).getStringTopic("source").publish()
+            source.set("ip:http://10.7.14.2:5800")
+
         now = Timer.getFPGATimestamp()
         heartbeat = self.getHB()
         self.ticked = False
