@@ -24,6 +24,8 @@ from subsystems.indexer import Indexer
 from commands.reset_xy import ResetXY
 from subsystems.photon_tag_camera import PhotonTagCamera
 from subsystems.shooter import Shooter
+from subsystems.intake import IntakeConstants
+from subsystems.intake import Intake
 from subsystems.hood import Hood
 from subsystems.turret import Turret
 from subsystems.intake_arm import IntakeArm
@@ -59,6 +61,10 @@ class RobotContainer:
             inverted= False,
             hoodServo= self.hoodServo,
         )
+        self.intake = Intake(
+            inverted= False
+        )
+
         self.limelightLocalizer = LimelightLocalizer(self.robotDrive)
 
         self.lumaCamera = PhotonTagCamera("luma-front")
@@ -225,6 +231,7 @@ class RobotContainer:
         self.driverController.button(XboxController.Button.kX).whileTrue(
             InstantCommand(lambda: self.hood.forgetZero(), self.hood)
         )
+
 
 
     def disablePIDSubsystems(self) -> None:

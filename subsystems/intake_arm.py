@@ -89,9 +89,9 @@ class IntakeArm(Subsystem):
 
     def notReady(self) -> str:
         if not self.zeroFound:
-            return "intakearm zero not found"
+            return "intake arm zero not found"
         elif abs(self.positionGoal - self.getPosition()) > Constants.positionTolerance:
-            return "intakearm not at target angle"
+            return "intake arm not at target angle"
         else:
             return ""
 
