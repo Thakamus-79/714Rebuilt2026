@@ -26,6 +26,7 @@ from subsystems.photon_tag_camera import PhotonTagCamera
 from subsystems.shooter import Shooter
 from subsystems.hood import Hood
 from subsystems.turret import Turret
+from subsystems.intake_arm import IntakeArm
 
 class RobotContainer:
     """
