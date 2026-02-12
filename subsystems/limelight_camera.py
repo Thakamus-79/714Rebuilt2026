@@ -6,9 +6,9 @@
 #
 from typing import Tuple
 
-from wpilib import Timer, SmartDashboard, RobotController
+from wpilib import Timer, RobotController
 from commands2 import Subsystem
-from ntcore import NetworkTableInstance, StringArrayTopic, StringTopic
+from ntcore import NetworkTableInstance, StringPublisher, StringArrayPublisher
 from wpimath.geometry import Rotation2d
 from wpinet import PortForwarder
 
@@ -50,8 +50,8 @@ class LimelightCamera(Subsystem):
 
         # port forwarding and feed address overrides, in case this camera is connected over USB
         self.isUsb0 = isUsb0
-        self.ntSource: StringTopic | None = None
-        self.ntStreams: StringArrayTopic | None = None
+        self.ntSource: StringPublisher | None = None
+        self.ntStreams: StringArrayPublisher | None = None
         self.ntStreamsValue, self.ntSourceValue = None, None
         if isUsb0:
             self.setupCameraAtUsb0(instance)
