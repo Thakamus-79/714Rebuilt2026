@@ -30,7 +30,7 @@ class DriveConstants:
     # Driving Parameters - Note that these are not the maximum capable speeds of
     # the robot, rather the allowed maximum speeds
     kMaxSpeedMetersPerSecond = 4.8
-    kMaxAngularSpeed = 1.5 * math.tau  # radians per second
+    kMaxAngularSpeed = 3 * math.tau  # radians per second
 
     kMagnitudeSlewRate = 9.8  # m/s per second (1g acceleration allowed along X and along Y axis)
     kRotationalSlewRate = 24.0  # rad/s per second
@@ -177,7 +177,7 @@ class AutoConstants:
     # below are really trajectory constants
     kMaxSpeedMetersPerSecond = DriveConstants.kMaxSpeedMetersPerSecond * 0.9
     kMaxAccelerationMetersPerSecondSquared = DriveConstants.kMagnitudeSlewRate * 0.9
-    kMaxAngularSpeedRadiansPerSecond = math.pi
+    kMaxAngularSpeedRadiansPerSecond = 3 * math.pi
     kMaxAngularAccelRadiansPerSecondSquared = math.pi
     kPXController = 1.0  # how aggressive should be the controller that returns the robot back to the trajectory
     kPYController = 1.0  # how aggressive should be the controller that returns the robot back to the trajectory

@@ -6,15 +6,21 @@ import wpimath
 import wpilib
 import typing
 
-from commands2 import cmd, InstantCommand, RunCommand
+from commands2 import cmd, InstantCommand, RunCommand, ConditionalCommand, SelectCommand
 from commands2.button import CommandGenericHID
 from rev import SparkMax
-from wpilib import XboxController, Servo
+from wpilib import XboxController, Servo, DriverStation
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
 
+from commands.drive_towards_object import SwerveTowardsObject
+from commands.shooting import Shooter, GetReadyAndKeepShooting
+from commands.shooting import GetReadyToShoot
+from commands.shooting import GetInRange
+from commands.shooting import GetReadyToShoot
 from commands.aimtodirection import AimToDirection
 from commands.trajectory import SwerveTrajectory, JerkyTrajectory
 from constants import AutoConstants, DriveConstants, OIConstants
+from subsystems import shooter
 from subsystems.firing_table import FiringTable
 from subsystems.drivesubsystem import DriveSubsystem, BadSimPhysics
 from subsystems.limelight_camera import LimelightCamera
@@ -51,6 +57,14 @@ class RobotContainer:
             minimumRangeMeters=2.0,
             maximumRangeMeters=3.0,
         )
+        self.firingTableRighWall = FiringTable(
+            self.robotDrive,
+            shooterLocationOnDrivetrain=Translation2d(x=-0.2, y=0),
+            goalIfRed=Translation2d(x=15.0, y=6.0),
+            goalIfBlue=Translation2d(x=2, y=2),
+            minimumRangeMeters=2.0,
+            maximumRangeMeters=3.0,
+        )
         self.hoodServo = Servo(
             channel=0
         )
@@ -61,6 +75,10 @@ class RobotContainer:
             inverted= False,
             hoodServo= self.hoodServo,
         )
+        self.turret = Turret( leadMotorCANId= 70,
+        motorClass= SparkMax,
+        )
+
         self.intake = Intake(
             inverted= False
         )
@@ -164,18 +182,18 @@ class RobotContainer:
         self.driverController.button(XboxController.Button.kRightBumper).whileTrue(keepNoseAt45Degrees)
         # ^^ set up a condition for when to do this: do it when the joystick right bumper is pressed
 
-        # from commands.shooting import GetInRange
-        # from commands.shooting import GetReadyToShoot
-        # getInRange = GetInRange(
-        #     goal=self.firingTable,
-        #     drivetrain=self.robotDrive
-        # )
-        # getReady = GetReadyToShoot(
-        #     firingTable=self.firingTable,
-        #     shooter=self.shooter,
-        #     turret=None,
-        #     drivetrain=self.robotDrive  # if we have a turret, drivetrain=None (otherwise supply drivetrain=self.robotDrive)
-        # )
+
+        getInRange = GetInRange(
+            goal=self.firingTable,
+            drivetrain=self.robotDrive
+        )
+        getReady = GetReadyToShoot(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=None,
+            drivetrain=self.robotDrive  # if we have a turret, drivetrain=None (otherwise supply drivetrain=self.robotDrive)
+        )
+
         #
         # self.driverController.button(XboxController.Button.kA).whileTrue(
         #     getReady
@@ -251,7 +269,124 @@ class RobotContainer:
         self.chosenAuto.setDefaultOption("trajectory example", self.getAutonomousTrajectoryExample)
         self.chosenAuto.addOption("left blue", self.getAutonomousLeftBlue)
         self.chosenAuto.addOption("left red", self.getAutonomousLeftRed)
+        self.chosenAuto.addOption("Test2", self.getAutonomousTest2Shooting)
+        self.chosenAuto.addOption("Depot",self.getAutonmouseSlowintake)
         wpilib.SmartDashboard.putData("Chosen Auto", self.chosenAuto)
+
+
+
+    def getAutonomousTest2Shooting(self):
+        setStartPose = ConditionalCommand(
+            ResetXY(x=1.542, y=4.025, headingDegrees=+180, drivetrain=self.robotDrive),
+            ResetXY(x=AutoConstants.kFieldTags.getFieldLength() - 1.542,
+                    y=AutoConstants.kFieldTags.getFieldWidth() - 4.025, headingDegrees=0, drivetrain=self.robotDrive),
+            lambda: DriverStation.getAlliance() == DriverStation.Alliance.kBlue
+        )
+        shootWhenReady = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.rightIndexer,
+            indexerSpeed=0.4
+        ).withTimeout(seconds=2.0)
+
+        driveToManyGamepieces = SwerveTrajectory(
+            drivetrain=self.robotDrive,
+            speed=+1.0,
+            waypoints=[
+                (1.956, 2.217, -65.136),  # start at x=1.0, y=4.0, heading=0 degrees (North)
+                (3.069, 0.677, -0.567),  # next waypoint: x=2.5, y=5.0
+                (5.540, 0.677, 2.570),  # next waypoint
+                  # next waypoint
+            ],
+            endpoint=(7.170, 0.833, +80),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=False,  # to keep driving onto next command, set =False
+        )
+        centerintake = SwerveTrajectory(
+            drivetrain=self.robotDrive,
+            speed=+0.5,
+            waypoints=[
+
+            ],
+            endpoint=(7.972, 2.476, +80),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=True,  # to keep driving onto next command, set =False
+        )
+
+        finalShootingCMD = GetReadyAndKeepShooting(
+            firingTable=self.firingTableRighWall,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.rightIndexer,
+            indexerSpeed=0.4
+        ).withTimeout(2.0)
+        startIntake = InstantCommand(lambda: self.intake.setVelocityGoal(2000, 1000))
+        stopIntake = InstantCommand(lambda: self.intake.setVelocityGoal(0, 0000))
+        command = setStartPose.andThen(shootWhenReady.andThen(startIntake).andThen(driveToManyGamepieces)
+        .andThen(centerintake).andThen(finalShootingCMD))
+        return command
+
+    def getAutonmouseSlowintake(self):
+        setStartPose = ConditionalCommand(
+            ResetXY(x=1.542, y=4.025, headingDegrees=+180, drivetrain=self.robotDrive),
+            ResetXY(x=AutoConstants.kFieldTags.getFieldLength() - 1.542, y=AutoConstants.kFieldTags.getFieldWidth() - 4.025, headingDegrees=0, drivetrain=self.robotDrive),
+            lambda: DriverStation.getAlliance() == DriverStation.Alliance.kBlue
+        )
+        shootWhenReady = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.rightIndexer,
+            indexerSpeed=0.4
+        ).withTimeout(seconds=2.0)
+
+        drivetoball = SwerveTrajectory(
+            drivetrain=self.robotDrive,
+            speed=+1.0,
+            waypoints=[
+                (1.542, 4.025, +180),
+                (1.728, 4.431, +180),
+                (2.422, 5.206, +180),
+                (1.728, 5.754, +180)
+            ],
+            endpoint=(1.361, 5.931, +180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=False,  # to keep driving onto next command, set =False
+        ).andThen(SwerveTrajectory(
+            drivetrain=self.robotDrive,
+            speed=+0.5,
+            waypoints=[
+
+            ],
+            endpoint=(0.623, 5.931,+180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=True,  # to keep driving onto next command, set =False
+        ))
+
+
+        shootafterIntake = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.rightIndexer,
+            indexerSpeed=0.4
+        ).withTimeout(seconds=2.0)
+
+        startIntake = InstantCommand(lambda: self.intake.setVelocityGoal(2000, 1000))
+        stopIntake = InstantCommand(lambda: self.intake.setVelocityGoal(0, 0000))
+        command = (setStartPose.andThen(shootWhenReady).andThen(startIntake).andThen(drivetoball)
+                   .andThen(stopIntake).andThen(shootafterIntake))
+        return command
+
+
+
+
+
 
     def getAutonomousLeftBlue(self):
         setStartPose = ResetXY(x=0.783, y=6.686, headingDegrees=+60, drivetrain=self.robotDrive)
