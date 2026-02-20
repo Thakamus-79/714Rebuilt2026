@@ -75,10 +75,10 @@ class RobotContainer:
             inverted= False,
             hoodServo= self.hoodServo,
         )
-        self.turret = Turret( leadMotorCANId= 70,
-        motorClass= SparkMax,
+        self.turret = Turret(
+            leadMotorCANId=70,
+            motorClass=SparkMax
         )
-
         self.intake = Intake(
             inverted= False
         )
