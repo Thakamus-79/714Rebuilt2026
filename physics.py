@@ -18,16 +18,14 @@
 import wpilib.simulation
 
 from pyfrc.physics.core import PhysicsInterface
-from pyfrc.physics import motor_cfgs, tankmodel
-from pyfrc.physics.units import units
 
 import typing
 
-from rev import SparkMaxSim, SparkRelativeEncoderSim
-from wpilib.simulation import ElevatorSim
+from rev import SparkMaxSim, SparkFlexSim, SparkRelativeEncoderSim
 from wpimath._controls._controls.plant import DCMotor
 
-from subsystems.turret import Constants
+from subsystems.turret import Constants as TurretConstants
+from subsystems.shooter import ShooterConstants
 
 if typing.TYPE_CHECKING:
     from robot import MyRobot
@@ -43,11 +41,17 @@ class PhysicsEngine:
     def __init__(self, physics_controller: PhysicsInterface, robot: "MyRobot"):
         self.physics_controller = physics_controller
 
-        # Motors
+        # Turret
         turret_gearbox = DCMotor.NEO(1)
         self.turret_motor = SparkMaxSim(robot.robotContainer.turret.motor, turret_gearbox)
         self.turret_encoder = SparkRelativeEncoderSim(robot.robotContainer.turret.motor)
         self.turret = robot.robotContainer.turret
+
+        # Shooter
+        shooter_gearbox = DCMotor.NEO(1)
+        self.shooter_motor = SparkFlexSim(robot.robotContainer.shooter.leadMotor, shooter_gearbox)
+        self.shooter_encoder = SparkRelativeEncoderSim(robot.robotContainer.shooter.leadMotor)
+        self.shooter = robot.robotContainer.shooter
 
 
     def update_sim(self, now: float, tm_diff: float) -> None:
@@ -66,6 +70,11 @@ class PhysicsEngine:
             self.turret_motor.setPosition(0.0)
             self.turret.pidController = self.turret.motor.getClosedLoopController()
             self.turret.setPositionGoal(0.0)
-        dv = tm_diff * (self.turret.positionGoal - self.turret_motor.getPosition()) * 10 * Constants.kP
-        self.turret_motor.setVelocity(dv + self.turret_motor.getVelocity() * (1 - 5 * tm_diff))
+        turret_dv = tm_diff * (self.turret.positionGoal - self.turret_motor.getPosition()) * TurretConstants.kP * 50.0
+        self.turret_motor.setVelocity(turret_dv + self.turret_motor.getVelocity() * (1 - 10.0 * tm_diff))
         self.turret_motor.iterate(self.turret_motor.getVelocity(), 12.0, tm_diff)
+
+        # Simulate the shooter
+        shooter_dv = (self.shooter.velocityGoal - self.shooter_motor.getVelocity()) * ShooterConstants.kP * 400.0
+        self.shooter_motor.setVelocity(shooter_dv + self.shooter_motor.getVelocity())
+        self.shooter_motor.iterate(self.shooter_motor.getVelocity(), 12.0, tm_diff)

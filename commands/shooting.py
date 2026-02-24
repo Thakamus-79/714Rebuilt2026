@@ -220,9 +220,9 @@ class GetReadyToShoot(commands2.Command):
     def distanceNotGood(self, distance):
         if self.firingTable.maximumRangeMeters != 0:
             if distance > self.firingTable.maximumRangeMeters:
-                return "too far"
+                return f"too far, max range {self.firingTable.maximumRangeMeters} meters"
             if distance < self.firingTable.minimumRangeMeters:
-                return "too close"
+                return f"too close, min range {self.firingTable.minimumRangeMeters} meters"
         return ""
 
 

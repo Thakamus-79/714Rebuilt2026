@@ -13,10 +13,7 @@ from wpilib import XboxController, Servo, DriverStation
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
 
 from commands.drive_towards_object import SwerveTowardsObject
-from commands.shooting import Shooter, GetReadyAndKeepShooting
-from commands.shooting import GetReadyToShoot
-from commands.shooting import GetInRange
-from commands.shooting import GetReadyToShoot
+from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange
 from commands.aimtodirection import AimToDirection
 from commands.trajectory import SwerveTrajectory, JerkyTrajectory
 from constants import AutoConstants, DriveConstants, OIConstants
@@ -49,9 +46,16 @@ class RobotContainer:
         self.robotDrive = DriveSubsystem()
 
         # tracks the location of goal posts for shooting, recommends firing angles and speeds
+        self.turret = Turret(
+            leadMotorCANId=70,
+            drivetrain=self.robotDrive,
+            turretLocationOnDrivetrain=Translation2d(x=-0.2, y=0),
+            motorClass=SparkMax,
+            display=True,
+        )
         self.firingTable = FiringTable(
             self.robotDrive,
-            shooterLocationOnDrivetrain=Translation2d(x=-0.2, y=0),
+            shooterLocationOnDrivetrain=self.turret.turretLocationOnDrivetrain,
             goalIfBlue=Translation2d(x=4.59, y=4.025),
             goalIfRed=Translation2d(x=11.88, y=4.025),
             minimumRangeMeters=2.0,
@@ -59,7 +63,7 @@ class RobotContainer:
         )
         self.firingTableRighWall = FiringTable(
             self.robotDrive,
-            shooterLocationOnDrivetrain=Translation2d(x=-0.2, y=0),
+            shooterLocationOnDrivetrain=self.turret.turretLocationOnDrivetrain,
             goalIfRed=Translation2d(x=15.0, y=6.0),
             goalIfBlue=Translation2d(x=2, y=2),
             minimumRangeMeters=2.0,
@@ -74,10 +78,6 @@ class RobotContainer:
         self.shooter = Shooter(
             inverted= False,
             hoodServo= self.hoodServo,
-        )
-        self.turret = Turret(
-            leadMotorCANId=70,
-            motorClass=SparkMax
         )
         self.intake = Intake(
             inverted= False
@@ -190,14 +190,9 @@ class RobotContainer:
         getReady = GetReadyToShoot(
             firingTable=self.firingTable,
             shooter=self.shooter,
-            turret=None,
-            drivetrain=self.robotDrive  # if we have a turret, drivetrain=None (otherwise supply drivetrain=self.robotDrive)
+            turret=self.turret,
+            drivetrain=None
         )
-
-        #
-        # self.driverController.button(XboxController.Button.kA).whileTrue(
-        #     getReady
-        # )
 
         self.driverController.button(XboxController.Button.kA).onTrue(
             InstantCommand(lambda: self.shooter.setVelocityGoal(rpm=2000, rpmTolerance=200))
@@ -249,7 +244,6 @@ class RobotContainer:
         self.driverController.button(XboxController.Button.kX).whileTrue(
             InstantCommand(lambda: self.hood.forgetZero(), self.hood)
         )
-
 
 
     def disablePIDSubsystems(self) -> None:

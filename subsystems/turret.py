@@ -1,9 +1,15 @@
 # constants right here, to simplify
+import math
+from typing import List, Tuple
+
 from commands2 import Subsystem
 from rev import SparkBaseConfig, LimitSwitchConfig, SparkBase, SparkMax, ResetMode, PersistMode, ClosedLoopConfig, \
     FeedbackSensor
 from wpilib import SmartDashboard, RobotState
 from wpimath.filter import SlewRateLimiter
+from wpimath.geometry import Rotation2d, Translation2d, Pose2d
+
+from subsystems.drivesubsystem import DriveSubsystem
 
 
 class Constants:
@@ -33,8 +39,8 @@ class Constants:
     positionTolerance = 0.0625  # motor revolutions
 
     # calibrated angles:
-    minPositionDegrees = -20  # how many degrees is the shooter's heading when turret is @ minPosition?
-    maxPositionDegrees = 320  # how many degrees is the shooter's heading when turret is @ maxPosition
+    minPositionDegrees = +20  # how many degrees is the shooter's heading when turret is @ minPosition?
+    maxPositionDegrees = +340  # how many degrees is the shooter's heading when turret is @ maxPosition
 
     # PID configuration (after you are done with calibrating=True)
     kP = 0.4  # at first make it very small like this, then start tuning by increasing from there
@@ -57,7 +63,10 @@ class Turret(Subsystem):
     def __init__(
         self,
         leadMotorCANId: int,
+        drivetrain: DriveSubsystem | None,
+        turretLocationOnDrivetrain: Translation2d | None,
         motorClass=SparkMax,
+        display=True
     ) -> None:
         """
         Constructs a hood.
@@ -67,6 +76,11 @@ class Turret(Subsystem):
 
         self.zeroFound = False
         self.positionGoal = None
+        self.display = display
+        self.drivetrain = drivetrain
+        self.turretLocationOnDrivetrain = turretLocationOnDrivetrain
+        if display:
+            assert self.drivetrain is not None, "if display=True, drivetrain must be provided (for estimating angles)"
 
         # initialize the motors and switches
         self.motor = motorClass(
@@ -196,6 +210,11 @@ class Turret(Subsystem):
 
 
     def periodic(self):
+        # 0. draw on the dashboard (if allowed)
+        positionDegrees = toDegrees(self.getPosition())
+        goalDegrees = toDegrees(self.getPositionGoal())
+        if self.display and self.drivetrain.field is not None:
+            self.drawOnDashboardField(positionDegrees)
         # 1. do we need to find zero?
         if not self.zeroFound:
             self.findZero()
@@ -204,8 +223,19 @@ class Turret(Subsystem):
         SmartDashboard.putNumber("Turret/current", self.motor.getOutputCurrent())
         SmartDashboard.putNumber("Turret/goal", self.getPositionGoal())
         SmartDashboard.putNumber("Turret/pos", self.getPosition())
-        SmartDashboard.putNumber("Turret/degreesGoal", toDegrees(self.getPositionGoal()))
-        SmartDashboard.putNumber("Turret/degreesPos", toDegrees(self.getPosition()))
+        SmartDashboard.putNumber("Turret/degreesGoal", goalDegrees)
+        SmartDashboard.putNumber("Turret/degreesPos", positionDegrees)
+
+    def drawOnDashboardField(self, positionDegrees: float):
+        drivetrainCenter = self.drivetrain.getPose()
+        drivetrainDir = drivetrainCenter.rotation()
+        turretDirection = Rotation2d.fromDegrees(positionDegrees).rotateBy(drivetrainDir)
+        turretLocation = drivetrainCenter.translation()
+        if self.turretLocationOnDrivetrain is not None:
+            turretLocation += self.turretLocationOnDrivetrain.rotateBy(drivetrainDir)
+        right, left = _drawTurret(turretLocation, turretDirection)
+        self.drivetrain.field.getObject("turret-right").setPoses(right)
+        self.drivetrain.field.getObject("turret-left").setPoses(left)
 
 
 def _getLeadMotorConfig(
@@ -225,6 +255,18 @@ def _getLeadMotorConfig(
     config.smartCurrentLimit(Constants.stallCurrentLimit)
     config.inverted(inverted)
     return config
+
+
+def _drawTurret(origin: Translation2d, direction: Rotation2d) -> Tuple[List[Pose2d], List[Pose2d]]:
+    """
+    will draw two parallel lines in the direction of a turret
+    """
+    right, left = [], []
+    zero = Rotation2d(0)
+    for i in range(9):
+        right.append(Pose2d(origin + Translation2d(x=i * 0.1, y=-0.1).rotateBy(direction), zero))
+        left.append(Pose2d(origin + Translation2d(x=i * 0.1, y=+0.1).rotateBy(direction), zero))
+    return right, left
 
 
 def toDegrees(rotations):
