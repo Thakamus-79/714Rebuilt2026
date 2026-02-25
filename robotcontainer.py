@@ -72,9 +72,7 @@ class RobotContainer:
         self.hoodServo = Servo(
             channel=0
         )
-        self.indexer = Indexer(
-            leaderCanID=11, leaderInverted= False, followerCanID= 13, followerInverted= False
-        )
+        self.indexer = Indexer()
         self.shooter = Shooter(
             inverted= False,
             hoodServo= self.hoodServo,
