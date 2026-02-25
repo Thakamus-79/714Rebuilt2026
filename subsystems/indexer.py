@@ -66,21 +66,22 @@ class Indexer(Subsystem):
         self.feederController.setReference(self.feederVelocityGoal, SparkBase.ControlType.kVelocity)
 
     def setTurntableVelocityGoal(self, rpm):
-        raise NotImplementedError("TO DO")
+        self.turntableVelocityGoal = max(IndexerConstants.maxRPM, min(IndexerConstants.maxRPM, rpm))
+        self.turntableController.setReference(self.turntableVelocityGoal, SparkBase.ControlType.kVelocity)
 
 
     def getFeederVelocity(self):
         return self.feederEncoder.getVelocity()
 
     def getTurntableVelocity(self):
-        raise NotImplementedError("TO DO")
+        return self.turntableEncoder.getVelocity()
 
 
     def getFeederVelocityGoal(self):
         return self.feederVelocityGoal
 
     def getTurntableVelocityGoal(self):
-        raise NotImplementedError("TO DO")
+        return self.turntableVelocityGoal
 
 
     def stop(self):

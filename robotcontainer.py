@@ -219,21 +219,21 @@ class RobotContainer:
             InstantCommand(lambda: self.hood.forgetZero(), self.hood)
         )
 
-        # self.driverController.button(XboxController.Button.kA).whileTrue(
-        #     # will this make the hood go towards its zero, until it hits it and hits max current?
-        #     RunCommand(lambda: self.turret.drive(speed=-0.1), self.turret)
-        # ).onFalse(
-        #     InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
-        # )
-        #
-        # self.driverController.button(XboxController.Button.kB).whileTrue(
-        #     # will this make the hood go towards its zero, until it hits it and hits max current?
-        #     RunCommand(lambda: self.turret.drive(speed=0.1), self.turret)
-        # ).onFalse(
-        #     InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
-        # )
+        self.driverController.button(XboxController.Button.kA).whileTrue(
+            # will this make the hood go towards its zero, until it hits it and hits max current?
+            RunCommand(lambda: self.turret.drive(speed=-0.1), self.turret)
+        ).onFalse(
+            InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
+        )
 
-        self.driverController.button(XboxController.Button.kA).onTrue(
+        self.driverController.button(XboxController.Button.kB).whileTrue(
+            # will this make the hood go towards its zero, until it hits it and hits max current?
+            RunCommand(lambda: self.turret.drive(speed=0.1), self.turret)
+        ).onFalse(
+            InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
+        )
+
+        self.driverController.button(XboxController.Button.kY).onTrue(
             InstantCommand(lambda: self.indexer.setFeederVelocityGoal(-2000))
         ).onFalse(
             InstantCommand(lambda: self.indexer.stop())
