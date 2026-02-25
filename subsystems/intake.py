@@ -17,7 +17,7 @@ class IntakeConstants:
 
 class Intake(Subsystem):
     """
-    The easiest way to test the shooter is to put this into configureButtonBindings():
+    The easiest way to test the intake is to put this into configureButtonBindings():
     ```
 
     self.driverController.button(XboxController.Button.kA).onTrue(
