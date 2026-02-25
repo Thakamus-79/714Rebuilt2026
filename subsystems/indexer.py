@@ -1,118 +1,108 @@
 from commands2 import Subsystem
-
-from phoenix6.configs import CANrangeConfiguration
-from phoenix6.hardware import CANrange
-from phoenix6.signals import UpdateModeValue
-
-from libgrapplefrc import LaserCAN, LaserCanTimingBudget, LaserCanRangingMode, LaserCanRoi
-
-from rev import SparkMax, SparkBase, SparkBaseConfig, ResetMode, PersistMode
+from rev import SparkBaseConfig, SparkBase, SparkFlex, SparkMax, ResetMode, PersistMode
 from wpilib import SmartDashboard
 
 
-SHOW_LASERCAN = False
-SHOW_CANRANGE = False
+class IndexerConstants:
+    kFeederMotorCANID = 25
+    kTurntableMotorCANID = 26
 
+    kTargetFeederVelocity = 1000.0,  # RPM (please calibrate!)
 
-class Constants:
-    stallCurrentLimit = 5
+    kFF = 18.5 / 10000
+    kPFeeder = 0.5 / 10000
+    kPTurntable = 0.5 / 10000
+    maxRPM = 6000
+
+    kFeederCurrentLimit = 20  # amps, and it must be integer for Rev
+    kTurntableCurrentLimit = 20  # amps
 
 
 class Indexer(Subsystem):
-    def __init__(self, leaderCanID, leaderInverted=True, followerCanID=None, followerInverted=False) -> None:
+    """
+    The easiest way to test the shooter is to put this into configureButtonBindings():
+    ```
+
+    self.driverController.button(XboxController.Button.kA).onTrue(
+            InstantCommand(lambda: self.shooter.setVelocityGoal(2000, 1000))
+    ).onFalse(
+            InstantCommand(lambda: self.shooter.stop())
+    )
+
+    ```
+
+    """
+    def __init__(self, motorClass=SparkMax) -> None:
         super().__init__()
 
-        # 1. setup the leader motor
-        self.motor = SparkMax(leaderCanID, SparkBase.MotorType.kBrushless)
+        self.feederMotor = motorClass(IndexerConstants.kFeederMotorCANID, SparkBase.MotorType.kBrushless)
+        self.feederMotor.configure(
+            _motorConfig(IndexerConstants.kFF, IndexerConstants.kPFeeder, IndexerConstants.kFeederCurrentLimit),
+            ResetMode.kResetSafeParameters,
+            PersistMode.kPersistParameters,
+        )
+        self.feederController = self.feederMotor.getClosedLoopController()
+        self.feederEncoder = self.feederMotor.getEncoder()
+        self.feederVelocityGoal = 0.0
 
-        self.motorConfig = SparkBaseConfig()
-        self.motorConfig.inverted(leaderInverted)
-        self.motorConfig.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
-        self.motorConfig.smartCurrentLimit(Constants.stallCurrentLimit)
-        self.motor.configure(self.motorConfig,
-                             ResetMode.kResetSafeParameters,
-                             PersistMode.kPersistParameters)
-
-        # when the gamepiece is fully in, it will touch the limit switch -- physical or optical
-        self.limitSwitch = self.motor.getForwardLimitSwitch()
-
-        # 2. setup the follower motor, if followerCanID is not None
-        self.followerMotor = None
-        if followerCanID is not None:
-            self.followerMotor = SparkMax(followerCanID, SparkBase.MotorType.kBrushless)
-            followerConfig = SparkBaseConfig()
-            followerConfig.follow(leaderCanID, leaderInverted != followerInverted)
-            followerConfig.smartCurrentLimit(Constants.stallCurrentLimit)
-            self.followerMotor.configure(followerConfig,
-                                         ResetMode.kResetSafeParameters,
-                                         PersistMode.kPersistParameters)
-
-        # 3. safe initial state
-        self._setSpeed(0.0)
-
-        # Grapple rangefinder usage ("LaserCAN")
-        self.grappleRangeFinder = LaserCAN(0)
-        self.grappleRangeFinder.set_timing_budget(LaserCanTimingBudget.TB33ms)
-        # ^^ possibilities TB20ms, TB33ms, TB50ms, TB100ms
-        self.grappleRangeFinder.set_range(LaserCanRangingMode.Short)
-        # ^^ possibilities: Short, Long
-        self.grappleRangeFinder.set_roi(LaserCanRoi(x=8, y=8, h=16, w=16))  # this is the default, widest region
-        # ^^ possibilities: w/h = width and height (from 1 to 16), x,y = center of the region
+        self.turntableMotor = motorClass(IndexerConstants.kTurntableMotorCANID, SparkBase.MotorType.kBrushless)
+        self.turntableMotor.configure(
+            _motorConfig(IndexerConstants.kFF, IndexerConstants.kPTurntable, IndexerConstants.kTurntableCurrentLimit),
+            ResetMode.kResetSafeParameters,
+            PersistMode.kPersistParameters,
+        )
+        self.turntableController = self.turntableMotor.getClosedLoopController()
+        self.turntableEncoder = self.turntableMotor.getEncoder()
+        self.turntableVelocityGoal = 0.0
 
 
-        # CTRE rangefinder ("CANrange") usage:
-        self.ctrRangeFinder = CANrange(device_id=10)
-        # step A: configure the rangefinder
-        rangeFinderConfig = CANrangeConfiguration()
-        # - set to 100Hz, short range mode
-        rangeFinderConfig.to_f_params.update_mode = UpdateModeValue.SHORT_RANGE100_HZ
-        # - you can also set the field-of-view for this range finder (narrow angle? or wide angle? in between?)
-        # rangeFinderConfig.fov_params.fov_range_x =
-        # rangeFinderConfig.fov_params.fov_range_y =
-        self.ctrRangeFinder.configurator.apply(rangeFinderConfig)
-
-        # step B: reset the sensor errors before using it, and then it's ready
-        self.ctrRangeFinder.clear_sticky_faults()
+    def feedGamepieceIntoShooter(self):
+        self.setFeederVelocityGoal(IndexerConstants.kTargetFeederVelocity)
+        # and maybe set the turntable velocity goal?
 
 
-    def feedGamepieceIntoShooter(self, speed=1.0):
-        """
-        Rush the gamepiece forward into the shooter, possibly at full speed (100%)
-        """
-        self._setSpeed(speed)
+    def setFeederVelocityGoal(self, rpm):
+        self.feederVelocityGoal = max(-IndexerConstants.maxRPM, min(IndexerConstants.maxRPM, rpm))
+        self.feederController.setReference(self.feederVelocityGoal, SparkBase.ControlType.kVelocity)
+
+    def setTurntableVelocityGoal(self, rpm):
+        raise NotImplementedError("TO DO")
 
 
-    def ejectGamepieceBackward(self, speed=0.25, speed2=None):
-        """
-        Eject the gamepiece back out of the indexer
-        """
-        self._setSpeed(-speed)
+    def getFeederVelocity(self):
+        return self.feederEncoder.getVelocity()
+
+    def getTurntableVelocity(self):
+        raise NotImplementedError("TO DO")
+
+
+    def getFeederVelocityGoal(self):
+        return self.feederVelocityGoal
+
+    def getTurntableVelocityGoal(self):
+        raise NotImplementedError("TO DO")
 
 
     def stop(self):
-        self._setSpeed(0)
+        self.feederMotor.stopMotor()
+        self.feederVelocityGoal = 0
+        # TO DO: add the stopping of the turntable
 
 
-    def _setSpeed(self, speed):
-        self.motor.set(speed)
-        SmartDashboard.putNumber("Indexer/speedGoal", speed)
+    def periodic(self):
+        SmartDashboard.putNumber("IndexerFeeder/rpmSeen", self.getFeederVelocity())
+        SmartDashboard.putNumber("IndexerFeeder/rpmGoal", self.getFeederVelocityGoal())
+        # TO DO: add the similar things for the turntable
 
 
-    def periodic(self) -> None:
-        if SHOW_LASERCAN:
-            m = self.grappleRangeFinder.get_measurement()
-            if m is not None and m.status == 0:  # 0 means "in range", 4 means "out of range", and other values in the docs
-                SmartDashboard.putNumber("Indexer/gDistValue", m.distance_mm / 1000.0)
-                SmartDashboard.putNumber("Indexer/gAmbient", m.ambient)
-                # we also have m.mode and (m.roi.x, m.roi.y, m.roi.w, m.roi.h) if needed
-            else:  # 0 means "in range", 4 means "out of range", and other values in the docs
-                SmartDashboard.putNumber("Indexer/gDistValue", float('nan'))
-                SmartDashboard.putNumber("Indexer/gAmbient", float('nan'))
-
-        if SHOW_CANRANGE:
-            distance = self.ctrRangeFinder.get_distance()
-            signalStrength = self.ctrRangeFinder.get_signal_strength()
-            SmartDashboard.putNumber("Indexer/cDistValue", distance.value)
-            SmartDashboard.putString("Indexer/cDistStatus", distance.status.name)
-            SmartDashboard.putNumber("Indexer/cDistSignalStrength", signalStrength.value)
-            SmartDashboard.putString("Indexer/cDistSignalStatus", signalStrength.status.name)
+def _motorConfig(kFF, kP, currentLimit) -> SparkBaseConfig:
+    config = SparkBaseConfig()
+    config.inverted(True)
+    config.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
+    config.limitSwitch.forwardLimitSwitchEnabled(False)
+    config.limitSwitch.reverseLimitSwitchEnabled(False)
+    config.closedLoop.pid(kP, 0.0, 0.0)
+    config.closedLoop.velocityFF(kFF)
+    config.closedLoop.outputRange(-1, +1)
+    config.smartCurrentLimit(currentLimit)
+    return config

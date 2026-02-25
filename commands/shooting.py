@@ -5,7 +5,7 @@ import commands2
 from wpilib import SmartDashboard
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 
-from commands.gotopoint import GoToPoint, GoToPointConstants
+from commands.gotopoint import GoToPointConstants
 from subsystems.firing_table import FiringTable
 from subsystems.drivesubsystem import DriveSubsystem
 from subsystems.indexer import Indexer

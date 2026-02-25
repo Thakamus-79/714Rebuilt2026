@@ -72,7 +72,7 @@ class RobotContainer:
         self.hoodServo = Servo(
             channel=0
         )
-        self.rightIndexer = Indexer(
+        self.indexer = Indexer(
             leaderCanID=11, leaderInverted= False, followerCanID= 13, followerInverted= False
         )
         self.shooter = Shooter(
@@ -245,6 +245,8 @@ class RobotContainer:
             InstantCommand(lambda: self.hood.forgetZero(), self.hood)
         )
 
+        self.driverController.button(2).whileTrue(getReady)
+
 
     def disablePIDSubsystems(self) -> None:
         """Disables all ProfiledPIDSubsystem and PIDSubsystem instances.
@@ -281,7 +283,7 @@ class RobotContainer:
             shooter=self.shooter,
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
-            indexer=self.rightIndexer,
+            indexer=self.indexer,
             indexerSpeed=0.4
         ).withTimeout(seconds=2.0)
 
@@ -314,7 +316,7 @@ class RobotContainer:
             shooter=self.shooter,
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
-            indexer=self.rightIndexer,
+            indexer=self.indexer,
             indexerSpeed=0.4
         ).withTimeout(2.0)
         startIntake = InstantCommand(lambda: self.intake.setVelocityGoal(2000, 1000))
@@ -334,7 +336,7 @@ class RobotContainer:
             shooter=self.shooter,
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
-            indexer=self.rightIndexer,
+            indexer=self.indexer,
             indexerSpeed=0.4
         ).withTimeout(seconds=2.0)
 
@@ -367,7 +369,7 @@ class RobotContainer:
             shooter=self.shooter,
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
-            indexer=self.rightIndexer,
+            indexer=self.indexer,
             indexerSpeed=0.4
         ).withTimeout(seconds=2.0)
 
