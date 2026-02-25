@@ -35,7 +35,7 @@ class Indexer(Subsystem):
     def __init__(self, motorClass=SparkMax) -> None:
         super().__init__()
 
-        self.feederMotor = motorClass(IndexerConstants.kFeederMotorCANID, SparkBase.MotorType.kBrushless)
+        self.feederMotor = SparkFlex(IndexerConstants.kFeederMotorCANID, SparkBase.MotorType.kBrushless)
         self.feederMotor.configure(
             _motorConfig(IndexerConstants.kFF, IndexerConstants.kPFeeder, IndexerConstants.kFeederCurrentLimit),
             ResetMode.kResetSafeParameters,
