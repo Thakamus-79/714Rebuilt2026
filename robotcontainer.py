@@ -47,7 +47,7 @@ class RobotContainer:
 
         # tracks the location of goal posts for shooting, recommends firing angles and speeds
         self.turret = Turret(
-            leadMotorCANId=70,
+            leadMotorCANId=12,
             drivetrain=self.robotDrive,
             turretLocationOnDrivetrain=Translation2d(x=-0.2, y=0),
             motorClass=SparkMax,
@@ -192,12 +192,12 @@ class RobotContainer:
             drivetrain=None
         )
 
-        self.driverController.button(XboxController.Button.kA).onTrue(
-            InstantCommand(lambda: self.shooter.setVelocityGoal(rpm=2000, rpmTolerance=200))
-        )
-        self.driverController.button(XboxController.Button.kA).onFalse(
-            InstantCommand(lambda: self.shooter.stop())
-        )
+        # self.driverController.button(XboxController.Button.kA).onTrue(
+        #     InstantCommand(lambda: self.shooter.setVelocityGoal(rpm=2000, rpmTolerance=200))
+        # )
+        # self.driverController.button(XboxController.Button.kA).onFalse(
+        #     InstantCommand(lambda: self.shooter.stop())
+        # )
 
 
         from commands.drive_towards_object import SwerveTowardsObject
@@ -215,35 +215,29 @@ class RobotContainer:
             dontSwitchToSmallerObject=True,
         )
 
-        # make a command to repeatedly drive to gamepieces (do it again after one gamepiece reached)
-        driveToManyGamepieces = driveToGamepiece.repeatedly()
-
-        # setup a condition for when to run that command
-        whenLeftTriggerPressed = self.driverController.axisGreaterThan(
-            XboxController.Axis.kLeftTrigger, threshold=0.1
-        )
-
-        whenLeftTriggerPressed.whileTrue(driveToManyGamepieces)
-
-        self.driverController.button(XboxController.Button.kA).whileTrue(
-            # will this make the hood go towards its zero, until it hits it and hits max current?
-            RunCommand(lambda: self.hood.setPositionGoal(-1.0), self.hood)
-        ).onFalse(
-            InstantCommand(lambda: self.hood.stopAndReset(), self.hood)
-        )
-
-        self.driverController.button(XboxController.Button.kB).whileTrue(
-            # will this make the hood go towards its zero, until it hits it and hits max current?
-            RunCommand(lambda: self.hood.setPositionGoal(-4.0), self.hood)
-        ).onFalse(
-            InstantCommand(lambda: self.hood.stopAndReset(), self.hood)
-        )
-
         self.driverController.button(XboxController.Button.kX).whileTrue(
             InstantCommand(lambda: self.hood.forgetZero(), self.hood)
         )
 
-        self.driverController.button(2).whileTrue(getReady)
+        # self.driverController.button(XboxController.Button.kA).whileTrue(
+        #     # will this make the hood go towards its zero, until it hits it and hits max current?
+        #     RunCommand(lambda: self.turret.drive(speed=-0.1), self.turret)
+        # ).onFalse(
+        #     InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
+        # )
+        #
+        # self.driverController.button(XboxController.Button.kB).whileTrue(
+        #     # will this make the hood go towards its zero, until it hits it and hits max current?
+        #     RunCommand(lambda: self.turret.drive(speed=0.1), self.turret)
+        # ).onFalse(
+        #     InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
+        # )
+
+        self.driverController.button(XboxController.Button.kA).onTrue(
+            InstantCommand(lambda: self.indexer.setFeederVelocityGoal(-2000))
+        ).onFalse(
+            InstantCommand(lambda: self.indexer.stop())
+        )
 
 
     def disablePIDSubsystems(self) -> None:

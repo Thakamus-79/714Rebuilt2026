@@ -15,11 +15,11 @@ from subsystems.drivesubsystem import DriveSubsystem
 class Constants:
     # other settings
     findingZeroSpeed = 0.14
-    stallCurrentLimit = 12  # amps (must be an integer for Rev)
+    stallCurrentLimit = 5  # amps (must be an integer for Rev)
     findingZeroCurrentLimit = stallCurrentLimit * 0.7
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
-    calibrating = False
+    calibrating = True
 
     # to calibrate, set calibrating = True above, and add this at the end of configureButtonBindings(...) in robotcontainer.py
     # self.driverController.button(XboxController.Button.kA).whileTrue(
@@ -34,13 +34,13 @@ class Constants:
     # (set findingZeroCurrentLimit to half of that value, set calibrating=False and your hood is ready)
 
     # which range of motion we want from this hood?
-    minPosition = -8.0  # motor revolutions
+    minPosition = -18.0  # motor revolutions
     maxPosition = -0.5  # motor revolutions
     positionTolerance = 0.0625  # motor revolutions
 
     # calibrated angles:
-    minPositionDegrees = +20  # how many degrees is the shooter's heading when turret is @ minPosition?
-    maxPositionDegrees = +340  # how many degrees is the shooter's heading when turret is @ maxPosition
+    minPositionDegrees = +270  # how many degrees is the shooter's heading when turret is @ minPosition?
+    maxPositionDegrees = +90  # how many degrees is the shooter's heading when turret is @ maxPosition
 
     # PID configuration (after you are done with calibrating=True)
     kP = 0.4  # at first make it very small like this, then start tuning by increasing from there

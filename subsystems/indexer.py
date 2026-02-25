@@ -4,17 +4,17 @@ from wpilib import SmartDashboard
 
 
 class IndexerConstants:
-    kFeederMotorCANID = 25
+    kFeederMotorCANID = 10
     kTurntableMotorCANID = 26
 
     kTargetFeederVelocity = 1000.0,  # RPM (please calibrate!)
 
-    kFF = 18.5 / 10000
-    kPFeeder = 0.5 / 10000
+    kFF = 21.8 / 10000
+    kPFeeder = 0.8 / 10000
     kPTurntable = 0.5 / 10000
     maxRPM = 6000
 
-    kFeederCurrentLimit = 20  # amps, and it must be integer for Rev
+    kFeederCurrentLimit = 80  # amps, and it must be integer for Rev
     kTurntableCurrentLimit = 20  # amps
 
 
@@ -24,9 +24,9 @@ class Indexer(Subsystem):
     ```
 
     self.driverController.button(XboxController.Button.kA).onTrue(
-            InstantCommand(lambda: self.shooter.setVelocityGoal(2000, 1000))
+            InstantCommand(lambda: self.indexer.setFeederVelocityGoal(2000))
     ).onFalse(
-            InstantCommand(lambda: self.shooter.stop())
+            InstantCommand(lambda: self.indexer.stop())
     )
 
     ```
@@ -86,18 +86,20 @@ class Indexer(Subsystem):
     def stop(self):
         self.feederMotor.stopMotor()
         self.feederVelocityGoal = 0
-        # TO DO: add the stopping of the turntable
+        self.turntableMotor.stopMotor()
+        self.turntableVelocityGoal = 0
 
 
     def periodic(self):
         SmartDashboard.putNumber("IndexerFeeder/rpmSeen", self.getFeederVelocity())
         SmartDashboard.putNumber("IndexerFeeder/rpmGoal", self.getFeederVelocityGoal())
+        SmartDashboard.putNumber("IndexerFeeder/current", self.feederMotor.getOutputCurrent())
         # TO DO: add the similar things for the turntable
 
 
 def _motorConfig(kFF, kP, currentLimit) -> SparkBaseConfig:
     config = SparkBaseConfig()
-    config.inverted(True)
+    config.inverted(False)
     config.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
     config.limitSwitch.forwardLimitSwitchEnabled(False)
     config.limitSwitch.reverseLimitSwitchEnabled(False)
