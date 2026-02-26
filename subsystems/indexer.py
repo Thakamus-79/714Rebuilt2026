@@ -95,6 +95,9 @@ class Indexer(Subsystem):
         SmartDashboard.putNumber("IndexerFeeder/rpmSeen", self.getFeederVelocity())
         SmartDashboard.putNumber("IndexerFeeder/rpmGoal", self.getFeederVelocityGoal())
         SmartDashboard.putNumber("IndexerFeeder/current", self.feederMotor.getOutputCurrent())
+        SmartDashboard.putNumber("Turntable/rpmSeen", self.getTurntableVelocity())
+        SmartDashboard.putNumber("Turntable/rpmGoal", self.getTurntableVelocityGoal())
+        SmartDashboard.putNumber("Turntable/current", self.turntableMotor.getOutputCurrent())
         # TO DO: add the similar things for the turntable
 
 
