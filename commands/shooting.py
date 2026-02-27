@@ -268,7 +268,7 @@ class GetReadyAndKeepShooting(GetReadyToShoot):
         if self.notReady:
             self.indexer.stop()
         else:
-            self.indexer.feedGamepieceIntoShooter(self.indexerSpeed)
+            self.indexer.feedGamepieceIntoShooter()
 
     def end(self, interrupted: bool):
         super().end(interrupted=interrupted)
