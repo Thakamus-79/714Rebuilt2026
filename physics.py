@@ -75,6 +75,6 @@ class PhysicsEngine:
         self.turret_motor.iterate(self.turret_motor.getVelocity(), 12.0, tm_diff)
 
         # Simulate the shooter
-        shooter_dv = (self.shooter.feederVelocityGoal - self.shooter_motor.getVelocity()) * ShooterConstants.kP * 400.0
+        shooter_dv = (self.shooter.velocityGoal - self.shooter_motor.getVelocity()) * ShooterConstants.kP * 400.0
         self.shooter_motor.setVelocity(shooter_dv + self.shooter_motor.getVelocity())
         self.shooter_motor.iterate(self.shooter_motor.getVelocity(), 12.0, tm_diff)
