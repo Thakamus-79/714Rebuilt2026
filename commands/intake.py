@@ -1,4 +1,5 @@
 import commands2
+from wpilib import Timer
 
 from subsystems.intake import Intake
 from subsystems.intake_arm import IntakeArm
@@ -74,3 +75,34 @@ class Eject(commands2.Command):
     def end(self) -> None:
         # TODO: when this command ends, stop the intake rollers and bring the arm up
         pass
+
+
+class Shake(commands2.Command):
+    """
+    This command shakes the intake and is likely going to be an energy hog,
+    but it will generate vibration that you need to pop the last gamepieces from the hopper.
+    """
+    def __init__(self, arm: IntakeArm, intervalSeconds=0.25):
+        super().__init__()
+        assert intervalSeconds > 0
+        self.intervalSeconds = intervalSeconds
+        self.arm = arm
+        self.start = None
+        self.addRequirements(arm)
+
+    def initialize(self):
+        # at the start, remember arm's target position before this command started
+        self.start = self.arm.positionGoal
+
+    def end(self, interrupted: bool):
+        # at the end, return the arm to its original target
+        self.arm.setPositionGoal(self.start)
+
+    def execute(self) -> None:
+        t = Timer.getFPGATimestamp()
+        phase = (t / self.intervalSeconds) % 1.0
+        # ^^ this phase oscillates between 0.0 and 0.99999, the arm will go up when phase<0.5 and go down otherwise
+        if phase < 0.5:
+            self.arm.setPositionGoal(0.8 * IntakeArmConstants.minPosition + 0.2 * IntakeArmConstants.maxPosition)
+        else:
+            self.arm.setPositionGoal(0.2 * IntakeArmConstants.minPosition + 0.8 * IntakeArmConstants.maxPosition)
