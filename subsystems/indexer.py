@@ -4,9 +4,9 @@ from wpilib import SmartDashboard
 
 
 class IndexerConstants:
-    kFeederMotorCANID = 10
-    kSecondFeederMotorCANID = 11
-    kWashingMachineCANID = 26
+    kFeederMotor1_CANID = 10
+    kFeederMotor2_CANID = 11
+    kWashingMachine_CANID = 26
 
     kTargetFeederVelocity = 1000.0,  # RPM (please calibrate!)
     kWashingMachineVelocity = 100.0, # RPM (please calibrate!)
@@ -37,7 +37,7 @@ class Indexer(Subsystem):
     def __init__(self, motorClass=SparkMax) -> None:
         super().__init__()
 
-        self.feederMotor1 = SparkFlex(IndexerConstants.kFeederMotorCANID, SparkBase.MotorType.kBrushless)
+        self.feederMotor1 = SparkFlex(IndexerConstants.kFeederMotor1_CANID, SparkBase.MotorType.kBrushless)
         self.feederMotor1.configure(
             _motorConfig(IndexerConstants.kFF, IndexerConstants.kPFeeder, IndexerConstants.kFeederCurrentLimit),
             ResetMode.kResetSafeParameters,
@@ -46,7 +46,8 @@ class Indexer(Subsystem):
         self.feederController1 = self.feederMotor1.getClosedLoopController()
         self.feederEncoder1 = self.feederMotor1.getEncoder()
 
-        self.feederMotor2 = SparkFlex(IndexerConstants.kSecondFeederMotorCANID, SparkBase.MotorType.kBrushless)
+        # not using inverted follower here (Rev motors used to forget their inverted status in brownouts last year)
+        self.feederMotor2 = SparkFlex(IndexerConstants.kFeederMotor2_CANID, SparkBase.MotorType.kBrushless)
         self.feederMotor2.configure(
             _motorConfig(IndexerConstants.kFF, IndexerConstants.kPFeeder, IndexerConstants.kFeederCurrentLimit),
             ResetMode.kResetSafeParameters,
@@ -56,7 +57,7 @@ class Indexer(Subsystem):
 
         self.feederVelocityGoal = 0.0
 
-        self.washingMachineMotor = motorClass(IndexerConstants.kWashingMachineCANID, SparkBase.MotorType.kBrushless)
+        self.washingMachineMotor = motorClass(IndexerConstants.kWashingMachine_CANID, SparkBase.MotorType.kBrushless)
         self.washingMachineMotor.configure(
             _motorConfig(IndexerConstants.kFF, IndexerConstants.kPTurntable, IndexerConstants.kTurntableCurrentLimit),
             ResetMode.kResetSafeParameters,
