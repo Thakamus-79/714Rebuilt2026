@@ -9,6 +9,7 @@ class IndexerConstants:
     kWashingMachineCANID = 26
 
     kTargetFeederVelocity = 1000.0,  # RPM (please calibrate!)
+    kWashingMachineVelocity = 100.0, # RPM (please calibrate!)
 
     kFF = 21.8 / 10000
     kPFeeder = 0.8 / 10000
@@ -68,7 +69,7 @@ class Indexer(Subsystem):
 
     def feedGamepieceIntoShooter(self):
         self.setFeederVelocityGoal(IndexerConstants.kTargetFeederVelocity)
-        # and maybe set the turntable velocity goal?
+        self.setWashingMachineVelocityGoal(IndexerConstants.kWashingMachineVelocity)
 
 
     def setFeederVelocityGoal(self, rpm):
