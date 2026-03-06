@@ -45,7 +45,6 @@ class LimelightLocalizer(Subsystem):
         self.learningRateMult.addOption("1%", 0.01)
         SmartDashboard.putData("Localizer/learningRate", self.learningRateMult)
 
-        self.flipped = False
         self.enabled = SendableChooser()
         self.enabled.addOption("off", False)
         self.enabled.setDefaultOption("on", True)
