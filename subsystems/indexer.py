@@ -5,7 +5,8 @@ from wpilib import SmartDashboard
 
 class IndexerConstants:
     kFeederMotorCANID = 10
-    kTurntableMotorCANID = 26
+    kSecondFeederMotorCANID = 11
+    kWashingMachineCANID = 26
 
     kTargetFeederVelocity = 1000.0,  # RPM (please calibrate!)
 
@@ -14,7 +15,7 @@ class IndexerConstants:
     kPTurntable = 0.5 / 10000
     maxRPM = 6000
 
-    kFeederCurrentLimit = 80  # amps, and it must be integer for Rev
+    kFeederCurrentLimit = 40  # amps, and it must be integer for Rev
     kTurntableCurrentLimit = 20  # amps
 
 
@@ -35,25 +36,34 @@ class Indexer(Subsystem):
     def __init__(self, motorClass=SparkMax) -> None:
         super().__init__()
 
-        self.feederMotor = SparkFlex(IndexerConstants.kFeederMotorCANID, SparkBase.MotorType.kBrushless)
-        self.feederMotor.configure(
+        self.feederMotor1 = SparkFlex(IndexerConstants.kFeederMotorCANID, SparkBase.MotorType.kBrushless)
+        self.feederMotor1.configure(
             _motorConfig(IndexerConstants.kFF, IndexerConstants.kPFeeder, IndexerConstants.kFeederCurrentLimit),
             ResetMode.kResetSafeParameters,
             PersistMode.kPersistParameters,
         )
-        self.feederController = self.feederMotor.getClosedLoopController()
-        self.feederEncoder = self.feederMotor.getEncoder()
+        self.feederController1 = self.feederMotor1.getClosedLoopController()
+        self.feederEncoder1 = self.feederMotor1.getEncoder()
+
+        self.feederMotor2 = SparkFlex(IndexerConstants.kSecondFeederMotorCANID, SparkBase.MotorType.kBrushless)
+        self.feederMotor2.configure(
+            _motorConfig(IndexerConstants.kFF, IndexerConstants.kPFeeder, IndexerConstants.kFeederCurrentLimit),
+            ResetMode.kResetSafeParameters,
+            PersistMode.kPersistParameters,
+        )
+        self.feederController2 = self.feederMotor2.getClosedLoopController()
+
         self.feederVelocityGoal = 0.0
 
-        self.turntableMotor = motorClass(IndexerConstants.kTurntableMotorCANID, SparkBase.MotorType.kBrushless)
-        self.turntableMotor.configure(
+        self.washingMachineMotor = motorClass(IndexerConstants.kWashingMachineCANID, SparkBase.MotorType.kBrushless)
+        self.washingMachineMotor.configure(
             _motorConfig(IndexerConstants.kFF, IndexerConstants.kPTurntable, IndexerConstants.kTurntableCurrentLimit),
             ResetMode.kResetSafeParameters,
             PersistMode.kPersistParameters,
         )
-        self.turntableController = self.turntableMotor.getClosedLoopController()
-        self.turntableEncoder = self.turntableMotor.getEncoder()
-        self.turntableVelocityGoal = 0.0
+        self.washingMachineController = self.washingMachineMotor.getClosedLoopController()
+        self.washingMachineEncoder = self.washingMachineMotor.getEncoder()
+        self.washingMachineVelocityGoal = 0.0
 
 
     def feedGamepieceIntoShooter(self):
@@ -63,41 +73,43 @@ class Indexer(Subsystem):
 
     def setFeederVelocityGoal(self, rpm):
         self.feederVelocityGoal = max(-IndexerConstants.maxRPM, min(IndexerConstants.maxRPM, rpm))
-        self.feederController.setReference(self.feederVelocityGoal, SparkBase.ControlType.kVelocity)
+        self.feederController1.setReference(self.feederVelocityGoal, SparkBase.ControlType.kVelocity)
+        self.feederController2.setReference(-self.feederVelocityGoal, SparkBase.ControlType.kVelocity)
 
-    def setTurntableVelocityGoal(self, rpm):
-        self.turntableVelocityGoal = max(IndexerConstants.maxRPM, min(IndexerConstants.maxRPM, rpm))
-        self.turntableController.setReference(self.turntableVelocityGoal, SparkBase.ControlType.kVelocity)
+    def setWashingMachineVelocityGoal(self, rpm):
+        self.washingMachineVelocityGoal = max(IndexerConstants.maxRPM, min(IndexerConstants.maxRPM, rpm))
+        self.washingMachineController.setReference(self.washingMachineVelocityGoal, SparkBase.ControlType.kVelocity)
 
 
     def getFeederVelocity(self):
-        return self.feederEncoder.getVelocity()
+        return self.feederEncoder1.getVelocity()
 
-    def getTurntableVelocity(self):
-        return self.turntableEncoder.getVelocity()
+    def getWashingMachineVelocity(self):
+        return self.washingMachineEncoder.getVelocity()
 
 
     def getFeederVelocityGoal(self):
         return self.feederVelocityGoal
 
-    def getTurntableVelocityGoal(self):
-        return self.turntableVelocityGoal
+    def getWashingMachineVelocityGoal(self):
+        return self.washingMachineVelocityGoal
 
 
     def stop(self):
-        self.feederMotor.stopMotor()
+        self.feederMotor1.stopMotor()
+        self.feederMotor2.stopMotor()
         self.feederVelocityGoal = 0
-        self.turntableMotor.stopMotor()
-        self.turntableVelocityGoal = 0
+        self.washingMachineMotor.stopMotor()
+        self.washingMachineVelocityGoal = 0
 
 
     def periodic(self):
         SmartDashboard.putNumber("IndexerFeeder/rpmSeen", self.getFeederVelocity())
         SmartDashboard.putNumber("IndexerFeeder/rpmGoal", self.getFeederVelocityGoal())
-        SmartDashboard.putNumber("IndexerFeeder/current", self.feederMotor.getOutputCurrent())
-        SmartDashboard.putNumber("Turntable/rpmSeen", self.getTurntableVelocity())
-        SmartDashboard.putNumber("Turntable/rpmGoal", self.getTurntableVelocityGoal())
-        SmartDashboard.putNumber("Turntable/current", self.turntableMotor.getOutputCurrent())
+        SmartDashboard.putNumber("IndexerFeeder/current", self.feederMotor1.getOutputCurrent())
+        SmartDashboard.putNumber("WashingMachine/rpmSeen", self.getWashingMachineVelocity())
+        SmartDashboard.putNumber("WashingMachine/rpmGoal", self.getWashingMachineVelocityGoal())
+        SmartDashboard.putNumber("WashingMachine/current", self.washingMachineMotor.getOutputCurrent())
         # TO DO: add the similar things for the turntable
 
 
