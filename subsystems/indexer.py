@@ -13,11 +13,11 @@ class IndexerConstants:
 
     kFF = 21.8 / 10000
     kPFeeder = 0.8 / 10000
-    kPTurntable = 0.5 / 10000
+    kPWashingMachine = 0.5 / 10000
     maxRPM = 6000
 
     kFeederCurrentLimit = 40  # amps, and it must be integer for Rev
-    kTurntableCurrentLimit = 20  # amps
+    kWashingMachineCurrentLimit = 20  # amps
 
 
 class Indexer(Subsystem):
@@ -59,7 +59,7 @@ class Indexer(Subsystem):
 
         self.washingMachineMotor = motorClass(IndexerConstants.kWashingMachine_CANID, SparkBase.MotorType.kBrushless)
         self.washingMachineMotor.configure(
-            _motorConfig(IndexerConstants.kFF, IndexerConstants.kPTurntable, IndexerConstants.kTurntableCurrentLimit),
+            _motorConfig(IndexerConstants.kFF, IndexerConstants.kPWashingMachine, IndexerConstants.kWashingMachineCurrentLimit),
             ResetMode.kResetSafeParameters,
             PersistMode.kPersistParameters,
         )
