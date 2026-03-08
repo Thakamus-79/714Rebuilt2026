@@ -3,10 +3,12 @@
 # Open Source Software; you can modify and/or share it under the terms of
 # the WPILib BSD license file in the root directory of this project.
 #
+from typing import List, Iterable
 
+from _pytest.stash import Stash
 from commands2 import Subsystem
 from wpilib import DriverStation, SmartDashboard, SendableChooser
-from wpimath.geometry import Translation2d, Rotation2d
+from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 from subsystems.drivesubsystem import DriveSubsystem
 from constants import LookupTable
 
@@ -38,6 +40,8 @@ class FiringTable(Subsystem):
         shooterLocationOnDrivetrain: Translation2d,
         goalIfBlue: Translation2d,
         goalIfRed: Translation2d,
+        fuelStashesIfBlue: Iterable[Translation2d] = (),
+        fuelStashesIfRed: Iterable[Translation2d] = (),
         minimumRangeMeters: float = 0.0,
         maximumRangeMeters: float = 0.0,
     ) -> None:
@@ -46,6 +50,8 @@ class FiringTable(Subsystem):
         self.shooterLocationOnDrivetrain = shooterLocationOnDrivetrain
         self.goalIfBlue = goalIfBlue
         self.goalIfRed = goalIfRed
+        self.fuelStashesIfBlue = fuelStashesIfBlue
+        self.fuelStashesIfRed = fuelStashesIfRed
         self.minimumRangeMeters = minimumRangeMeters
         self.maximumRangeMeters = maximumRangeMeters
 
@@ -127,11 +133,15 @@ class FiringTable(Subsystem):
 
     def periodic(self):
         alliance = DriverStation.getAlliance()
+        pose = self.drivetrain.getPose()
         if alliance == DriverStation.Alliance.kRed:
             self.goal = self.goalIfRed
+            if pose.x < 11.91:
+                self.goal = self.findNearestStash(pose, self.fuelStashesIfRed) or self.goalIfRed
         else:
             self.goal = self.goalIfBlue
-        pose = self.drivetrain.getPose()
+            if pose.x > 4.62:
+                self.goal = self.findNearestStash(pose, self.fuelStashesIfBlue) or self.goalIfBlue
         self.shooterLocation = pose.translation() + self.shooterLocationOnDrivetrain.rotateBy(pose.rotation())
         self.vectorToGoal = self.goal - self.shooterLocation
 
@@ -141,3 +151,18 @@ class FiringTable(Subsystem):
         SmartDashboard.putNumber("FiringTable/rpm", float('nan'))
         SmartDashboard.putNumber("FiringTable/hoodPos", float('nan'))
         SmartDashboard.putNumber("FiringTable/turretDirDegrees", float('nan'))
+
+
+    @staticmethod
+    def findNearestStash(pose: Pose2d, stashes: Iterable[Translation2d]) -> Translation2d | None:
+        """
+        If you have multiple stash points where robot can shoot, find the nearest one to the current position
+        """
+        start = pose.translation()
+        result, distance = None, float('inf')
+        for point in stashes:
+            d = start.squaredDistance(point)
+            if d < distance:
+                result = point
+                distance = d
+        return result

@@ -56,8 +56,12 @@ class RobotContainer:
         self.firingTable = FiringTable(
             self.robotDrive,
             shooterLocationOnDrivetrain=self.turret.turretLocationOnDrivetrain,
+            # where we should shoot when scoring
             goalIfBlue=Translation2d(x=4.59, y=4.025),
             goalIfRed=Translation2d(x=11.88, y=4.025),
+            # where are the fuel stashes, when we are passing from midfield
+            fuelStashesIfBlue=[Translation2d(x=1.6, y=0.8), Translation2d(x=1.6, y=7.2)],
+            fuelStashesIfRed=[Translation2d(x=14.8, y=0.8), Translation2d(x=14.8, y=7.2)],
             minimumRangeMeters=2.0,
             maximumRangeMeters=3.0,
         )
