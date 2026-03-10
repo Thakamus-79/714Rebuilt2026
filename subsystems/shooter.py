@@ -1,7 +1,7 @@
 from commands2 import Subsystem
 from rev import SparkBaseConfig, SparkBase, SparkFlex, ResetMode, PersistMode
 from wpilib import SmartDashboard, Servo
-
+from typing import List
 
 class ShooterConstants:
     kShooterMotorA_CANID = 41
@@ -29,17 +29,16 @@ class Shooter(Subsystem):
     ```
 
     """
-    def __init__(self, inverted=True, hoodServo: Servo | None = None) -> None:
+    def __init__(self, inverted=True, hoodServos: List[Servo] = ()) -> None:
         super().__init__()
 
-        self.hoodServo = hoodServo
+        self.hoodServos = hoodServos
         # just in case the bounds were not set, set them
-        if hasattr(hoodServo, "setBounds"):
-            self.hoodServo.setBounds(2000, 1500, 1500, 1500, 1000)
+        for servo in hoodServos:
+            if hasattr(servo, "setBounds"):
+                servo.setBounds(2000, 1500, 1500, 1500, 1000)
         self.hoodServoGoal = 0.0
-        if hoodServo is not None:
-            self.hoodServoGoal = hoodServo.get()
-            self.setHoodServoGoal(self.hoodServoGoal)
+        self.setHoodServoGoal(self.hoodServoGoal)
 
         self.leadMotor = SparkFlex(ShooterConstants.kShooterMotorA_CANID, SparkBase.MotorType.kBrushless)
         self.leadMotor.configure(
@@ -77,8 +76,8 @@ class Shooter(Subsystem):
     def setHoodServoGoal(self, goal):
         #self.hoodServoGoal = max(0.0, min(1.0, goal))
         SmartDashboard.putNumber("Shooter/hoodServoGoal", goal)
-        if self.hoodServo is not None:
-            self.hoodServo.set(self.hoodServoGoal)
+        for s in self.hoodServos:
+            s.set(self.hoodServoGoal)
 
     def setVelocityGoal(self, rpm, rpmTolerance):
         self.velocityTolerance = rpmTolerance

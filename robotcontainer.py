@@ -79,7 +79,7 @@ class RobotContainer:
         self.indexer = Indexer()
         self.shooter = Shooter(
             inverted= False,
-            hoodServo= self.hoodServo,
+            hoodServos = [self.hoodServo],
         )
         self.intake = Intake(
             inverted= False
