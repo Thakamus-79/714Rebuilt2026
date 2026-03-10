@@ -59,17 +59,17 @@ class FiringTable(Subsystem):
         self.vectorToGoal: Translation2d | None = None
         self.shooterLocation: Translation2d | None = None
 
-        self.rpmFactor = SendableChooser()
-        self.rpmFactor.setDefaultOption("1.0", 1.0)
-        for f in [0.5, 0.6, 0.7, 0.8, 0.9, 1.10, 1.20, 1.30, 1.40, 1.50, 1.60, 1.80, 2.00]:
-            self.rpmFactor.addOption(str(f), f)
-        SmartDashboard.putData("FiringTable/rpmFactor", self.rpmFactor)
+        self.rpm = SendableChooser()
+        self.rpm.setDefaultOption("lookup", None)
+        for rpm in range(1000, 6000, 250):
+            self.rpm.addOption(str(rpm), rpm)
+        SmartDashboard.putData("FiringTable/rpmChosen", self.rpm)
 
-        self.hoodPosFactor = SendableChooser()
-        self.hoodPosFactor.setDefaultOption("1.0", 1.0)
-        for f in [0.5, 0.6, 0.7, 0.8, 0.9, 1.10, 1.20, 1.30, 1.40, 1.50, 1.60, 1.80, 2.00]:
-            self.hoodPosFactor.addOption(str(f), f)
-        SmartDashboard.putData("FiringTable/hoodPosFactor", self.hoodPosFactor)
+        self.hoodPos = SendableChooser()
+        self.hoodPos.setDefaultOption("lookup", None)
+        for f in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+            self.hoodPos.addOption(str(f), f)
+        SmartDashboard.putData("FiringTable/hoodPosChosen", self.hoodPos)
 
         self.resetSmartDashboard()
 
@@ -81,10 +81,9 @@ class FiringTable(Subsystem):
         SmartDashboard.putNumber("FiringTable/distance", distanceMeters)
 
         # lookup the recommended RPM in the table
-        rpm = RECOMMENDED_SHOOTER_RPM_BY_DISTANCE.interpolate(distanceMeters)
-
-        # apply a factor added by the drivers (maybe 1.10 or 0.90 or something)
-        rpm = rpm * self.rpmFactor.getSelected()
+        rpm = self.rpm.getSelected()
+        if rpm is None:
+            rpm = RECOMMENDED_SHOOTER_RPM_BY_DISTANCE.interpolate(distanceMeters)
 
         SmartDashboard.putNumber("FiringTable/rpm", rpm)
         return rpm
@@ -96,10 +95,9 @@ class FiringTable(Subsystem):
         distanceMeters = self.distance()
 
         # lookup the recommended angle in the lookup table
-        hoodPosition = RECOMMENDED_SHOOTER_HOOD_POSITION_BY_DISTANCE.interpolate(distanceMeters)
-
-        # and then apply an offset added by the drivers
-        hoodPosition = hoodPosition * self.hoodPosFactor.getSelected()
+        hoodPosition = self.hoodPos.getSelected()
+        if hoodPosition is None:
+            hoodPosition = RECOMMENDED_SHOOTER_HOOD_POSITION_BY_DISTANCE.interpolate(distanceMeters)
 
         SmartDashboard.putNumber("FiringTable/hoodPos", hoodPosition)
         return hoodPosition
