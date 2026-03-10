@@ -243,6 +243,11 @@ class RobotContainer:
             InstantCommand(lambda: self.indexer.stop())
         )
 
+        # temporary hack for shooter practice: POV Up button puts the robot facing the red hub with its shooter
+        self.driverController.povUp().onTrue(
+            ResetXY(x=15.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive)
+        )
+
 
     def disablePIDSubsystems(self) -> None:
         """Disables all ProfiledPIDSubsystem and PIDSubsystem instances.
