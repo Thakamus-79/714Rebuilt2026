@@ -12,7 +12,7 @@ class IndexerConstants:
     kWashingMachineVelocity = 100.0, # RPM (please calibrate!)
 
     kFF = 21.8 / 10000
-    kPFeeder = 0.8 / 10000
+    kPFeeder = 0.6 / 10000
     kPWashingMachine = 0.5 / 10000
     maxRPM = 6000
 

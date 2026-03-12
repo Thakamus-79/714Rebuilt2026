@@ -5,7 +5,6 @@
 #
 from typing import List, Iterable
 
-from _pytest.stash import Stash
 from commands2 import Subsystem
 from wpilib import DriverStation, SmartDashboard, SendableChooser
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d

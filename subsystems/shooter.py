@@ -7,12 +7,12 @@ class ShooterConstants:
     kShooterMotorA_CANID = 41
     kShooterMotorB_CANID = 40
 
-    maxRPM = 6000
+    maxRPM = 5700
     kFF = 18.5 / 10000
     kP = 5 / 10000
     kD = 0.0 / 10000
 
-    stallCurrentLimit = 30  # amps, and it must be integer for Rev
+    stallCurrentLimit = 40  # amps, and it must be integer for Rev
 
 
 class Shooter(Subsystem):
@@ -98,6 +98,9 @@ class Shooter(Subsystem):
             self.reportedVelocitySeen = seen
             SmartDashboard.putNumber("Shooter/rpmGoal", goal)
             self.reportedVelocityGoal = goal
+        SmartDashboard.putNumber("Shooter/CurrentL", self.leadMotor.getOutputCurrent())
+        SmartDashboard.putNumber("Shooter/CurrentF", self.followMotor.getOutputCurrent())
+
 
     def stop(self):
         self.leadMotor.stopMotor()

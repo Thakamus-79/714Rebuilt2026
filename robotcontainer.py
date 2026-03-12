@@ -62,8 +62,8 @@ class RobotContainer:
             # where are the fuel stashes, when we are passing from midfield
             fuelStashesIfBlue=[Translation2d(x=1.6, y=0.8), Translation2d(x=1.6, y=7.2)],
             fuelStashesIfRed=[Translation2d(x=14.8, y=0.8), Translation2d(x=14.8, y=7.2)],
-            minimumRangeMeters=2.0,
-            maximumRangeMeters=3.0,
+            minimumRangeMeters=0.0,
+            maximumRangeMeters=99.0,
         )
         self.firingTableRighWall = FiringTable(
             self.robotDrive,
@@ -87,20 +87,15 @@ class RobotContainer:
 
         self.limelightLocalizer = LimelightLocalizer(self.robotDrive)
 
-        self.lumaCamera = PhotonTagCamera("luma-front")
-        self.centerCamera = LimelightCamera("limelight-center")
+        # self.centerCamera = LimelightCamera("limelight-center")
         self.limelightthreea = LimelightCamera("limelight-three", isUsb0=True)
 
+
+
         self.limelightLocalizer.addCamera(
-            self.lumaCamera,
-            cameraPoseOnRobot=Translation3d(x=0.0, y=0.0, z=0.0),  # Translation3d(x=0.0, y=0.155, z=1.0),
+            self.limelightthreea,
+            cameraPoseOnRobot=Translation3d(x=-0.1, y=0., z=0.2),
             cameraHeadingOnRobot=Rotation2d.fromDegrees(180),
-            cameraPitchAngleDegrees=0
-        )
-        self.limelightLocalizer.addCamera(
-            self.centerCamera,
-            cameraPoseOnRobot=Translation3d(x=0.4, y=-0.3, z=0.5),
-            cameraHeadingOnRobot=Rotation2d.fromDegrees(0.0),
             cameraPitchAngleDegrees=30
         )
         self.pickupCamera = LimelightCamera("limelight-intake")
@@ -196,6 +191,18 @@ class RobotContainer:
             drivetrain=None
         )
 
+        getReadyAndShoot = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+            indexerSpeed=0.4
+        )
+
+        self.driverController.button(XboxController.Button.kA).whileTrue(
+            getReady
+        )
         # self.driverController.button(XboxController.Button.kA).onTrue(
         #     InstantCommand(lambda: self.shooter.setVelocityGoal(rpm=2000, rpmTolerance=200))
         # )
@@ -219,34 +226,24 @@ class RobotContainer:
             dontSwitchToSmallerObject=True,
         )
 
-        self.driverController.button(XboxController.Button.kX).whileTrue(
-            InstantCommand(lambda: self.hood.forgetZero(), self.hood)
-        )
+        # self.driverController.button(XboxController.Button.kX).whileTrue(
+        #     InstantCommand(lambda: self.hood.forgetZero(), self.hood)
+        # )
+        #
+        # self.driverController.button(XboxController.Button.kA).whileTrue(
+        #     # will this make the hood go towards its zero, until it hits it and hits max current?
+        #     InstantCommand(lambda: self.turret.setAngleGoal(170), self.turret)
+        # )
 
-        self.driverController.button(XboxController.Button.kA).whileTrue(
-            # will this make the hood go towards its zero, until it hits it and hits max current?
-            RunCommand(lambda: self.turret.drive(speed=-0.1), self.turret)
-        ).onFalse(
-            InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
-        )
-
-        self.driverController.button(XboxController.Button.kB).whileTrue(
-            # will this make the hood go towards its zero, until it hits it and hits max current?
-            RunCommand(lambda: self.turret.drive(speed=0.1), self.turret)
-        ).onFalse(
-            InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
-        )
-
-        self.driverController.button(XboxController.Button.kY).onTrue(
-            InstantCommand(lambda: self.indexer.setFeederVelocityGoal(-2000))
-        ).onFalse(
-            InstantCommand(lambda: self.indexer.stop())
-        )
 
         # temporary hack for shooter practice: POV Up button puts the robot facing the red hub with its shooter
         self.driverController.povUp().onTrue(
             ResetXY(x=15.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive)
         )
+
+
+
+        
 
 
     def disablePIDSubsystems(self) -> None:
