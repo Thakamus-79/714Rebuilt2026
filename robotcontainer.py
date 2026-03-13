@@ -15,7 +15,7 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, R
 from commands.drive_towards_object import SwerveTowardsObject
 from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange
 from commands.aimtodirection import AimToDirection
-from commands.trajectory import SwerveTrajectory, JerkyTrajectory
+from commands.trajectory import SwerveTrajectory, SimpleTrajectory
 from constants import AutoConstants, DriveConstants, OIConstants
 from subsystems import shooter
 from subsystems.firing_table import FiringTable
@@ -240,7 +240,12 @@ class RobotContainer:
         self.driverController.povUp().onTrue(
             ResetXY(x=15.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive)
         )
-
+        self.driverController.button(1).onTrue(
+            ResetXY(x=15.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive)
+        )
+        self.driverController.button(2).whileTrue(
+            getReady
+        )
 
 
         
