@@ -91,7 +91,7 @@ class LimelightCamera(Subsystem):
         Only for localization: angles should be in degrees, xyz in meters
         """
         if self.cameraPoseSetRequest is not None:
-            self.cameraPoseSetRequest.set([x, -y, z, pitchDegrees, rollDegrees, yawDegrees])
+            self.cameraPoseSetRequest.set([x, -y, z, rollDegrees, pitchDegrees, yawDegrees])
             self.imuModeRequest.set(0)  # TODO: try 4, this can be a better choice for Limelight 4
             # 0 - use external imu (the only option available on Limelight 3)
             # 1 - use external imu, seed internal imu
