@@ -236,7 +236,6 @@ class GetReadyAndKeepShooting(GetReadyToShoot):
         turret=self.turret,
         drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
         indexer=self.indexer,
-        indexerSpeed=0.4
     )
 
     self.driverController.buttons(XboxController.Button.kY).whileTrue(shootWhenReady)
@@ -250,11 +249,9 @@ class GetReadyAndKeepShooting(GetReadyToShoot):
         turret: Turret | None,
         drivetrain: DriveSubsystem | None,
         indexer: Indexer,
-        indexerSpeed: float = 0.5
     ):
         super().__init__(firingTable, shooter, turret, drivetrain)
         self.indexer = indexer
-        self.indexerSpeed = indexerSpeed
         self.addRequirements(indexer)
 
     def initialize(self):
