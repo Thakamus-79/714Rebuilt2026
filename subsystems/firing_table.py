@@ -30,6 +30,9 @@ RECOMMENDED_SHOOTER_HOOD_POSITION_BY_DISTANCE = LookupTable({
 
 
 class FiringTable(Subsystem):
+    rpm: SendableChooser | None = None
+    hoodPos: SendableChooser | None = None
+
     """
     Tracks how far the goal is, recommends shooter speed (RPM), firing angle and direction
     """
@@ -58,17 +61,19 @@ class FiringTable(Subsystem):
         self.vectorToGoal: Translation2d | None = None
         self.shooterLocation: Translation2d | None = None
 
-        self.rpm = SendableChooser()
-        self.rpm.setDefaultOption("lookup", None)
-        for rpm in range(1000, 6000, 250):
-            self.rpm.addOption(str(rpm), rpm)
-        SmartDashboard.putData("FiringTable/rpmChosen", self.rpm)
+        if FiringTable.rpm is None:
+            FiringTable.rpm = SendableChooser()
+            FiringTable.rpm.setDefaultOption("lookup", None)
+            for rpm in range(1000, 6000, 250):
+                FiringTable.rpm.addOption(str(rpm), rpm)
+            SmartDashboard.putData("FiringTable/rpmChosen", FiringTable.rpm)
 
-        self.hoodPos = SendableChooser()
-        self.hoodPos.setDefaultOption("lookup", None)
-        for f in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-            self.hoodPos.addOption(str(f), f)
-        SmartDashboard.putData("FiringTable/hoodPosChosen", self.hoodPos)
+        if FiringTable.hoodPos is None:
+            FiringTable.hoodPos = SendableChooser()
+            FiringTable.hoodPos.setDefaultOption("lookup", None)
+            for f in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+                FiringTable.hoodPos.addOption(str(f), f)
+            SmartDashboard.putData("FiringTable/hoodPosChosen", FiringTable.hoodPos)
 
         self.resetSmartDashboard()
 
