@@ -8,7 +8,7 @@ import typing
 
 from commands2 import cmd, InstantCommand, RunCommand, ConditionalCommand, SelectCommand
 from commands2.button import CommandGenericHID
-from rev import SparkMax
+from rev import SparkMax, SparkFlex
 from wpilib import XboxController, Servo, DriverStation
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
 
@@ -50,7 +50,7 @@ class RobotContainer:
             leadMotorCANId=12,
             drivetrain=self.robotDrive,
             turretLocationOnDrivetrain=Translation2d(x=-0.2, y=0),
-            motorClass=SparkMax,
+            motorClass=SparkFlex,
             display=True,
         )
         self.firingTable = FiringTable(
@@ -89,16 +89,25 @@ class RobotContainer:
 
         # self.centerCamera = LimelightCamera("limelight-center")
         self.limelightthreea = LimelightCamera("limelight-three", isUsb0=True)
-
-
+        self.limelightaiming = LimelightCamera("limelight-aiming", isUsb0=True)
 
         self.limelightLocalizer.addCamera(
-            self.limelightthreea,
-            cameraPoseOnRobot=Translation3d(x=-0.1, y=0., z=0.2),
+            self.limelightaiming,
+            cameraPoseOnRobot=Translation3d(x=-0.1, y=-0.5, z=0.2),
             cameraHeadingOnRobot=Rotation2d.fromDegrees(180),
-            cameraPitchAngleDegrees=30
+            cameraPitchAngleDegrees=0
         )
+
+
+        # self.limelightLocalizer.addCamera(
+        #     self.limelightthreea,
+        #     cameraPoseOnRobot=Translation3d(x=-0.1, y=0., z=0.2),
+        #     cameraHeadingOnRobot=Rotation2d.fromDegrees(180),
+        #     cameraPitchAngleDegrees=0
+        # )
+
         self.pickupCamera = LimelightCamera("limelight-intake")
+
 
         self.hood = Hood(leadMotorCANId=43, motorClass= SparkMax)
 

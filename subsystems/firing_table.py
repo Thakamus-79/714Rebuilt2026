@@ -14,10 +14,12 @@ from constants import LookupTable
 
 # TODO : calibrate this lookup table on a real robot, and add more points
 RECOMMENDED_SHOOTER_RPM_BY_DISTANCE = LookupTable({
-    1.0 : 2000,  # if distance is 1m, spin at 2000 rpm
-    2.0 : 3000,  # if distance is 2m, spin at 3000 rpm
-    2.74 : 4300,
-    12.0 : 6000,  # if distance is 12m, spin at 6000 rpm
+    1.0 : 2000,
+    1.8 : 3000, # if distance is 1m, spin at 2000 rpm
+    2.0 : 3250,
+    2.2 : 3250,
+    2.4 : 3500,
+   # if distance is 12m, spin at 6000 rpm
 })
 
 # TODO : calibrate this lookup table on a real robot, and add more points
