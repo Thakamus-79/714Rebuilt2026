@@ -43,7 +43,7 @@ class PhysicsEngine:
 
         # Turret
         turret_gearbox = DCMotor.NEO(1)
-        self.turret_motor = SparkMaxSim(robot.robotContainer.turret.motor, turret_gearbox)
+        self.turret_motor = SparkFlexSim(robot.robotContainer.turret.motor, turret_gearbox)
         self.turret_encoder = SparkRelativeEncoderSim(robot.robotContainer.turret.motor)
         self.turret = robot.robotContainer.turret
 
