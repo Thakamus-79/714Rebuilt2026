@@ -49,7 +49,7 @@ class RobotContainer:
         self.turret = Turret(
             leadMotorCANId=12,
             drivetrain=self.robotDrive,
-            turretLocationOnDrivetrain=Translation2d(x=-0.2, y=0),
+            turretLocationOnDrivetrain=Translation2d(x=-0.0, y=0),
             motorClass=SparkFlex,
             display=True,
         )
@@ -93,9 +93,9 @@ class RobotContainer:
 
         self.limelightLocalizer.addCamera(
             self.limelightaiming,
-            cameraPoseOnRobot=Translation3d(x=-0.1, y=-0.5, z=0.2),
+            cameraPoseOnRobot=Translation3d(x=-0.24765, y=0.0, z=0.235),
             cameraHeadingOnRobot=Rotation2d.fromDegrees(180),
-            cameraPitchAngleDegrees=0
+            cameraPitchAngleDegrees=24
         )
 
 
@@ -109,7 +109,7 @@ class RobotContainer:
         self.pickupCamera = LimelightCamera("limelight-intake")
 
 
-        self.hood = Hood(leadMotorCANId=43, motorClass= SparkMax)
+        self.hood = None #Hood(leadMotorCANId=43, motorClass= SparkMax)
 
 
 
