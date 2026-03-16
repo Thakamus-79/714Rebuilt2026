@@ -193,16 +193,14 @@ class Turret(Subsystem):
         if now < self.zeroFindingPauseUntil:
             return
         if self.motor.getOutputCurrent() > Constants.findingZeroCurrentLimit:
-            self.zeroFindingAttemptsLeft -= 1
             self.stopAndReset()
+            self.zeroFindingPauseUntil = now + 0.25
+            print(f"Finding turret zero: error={self.relativeEncoder.getPosition()}")
+            self.relativeEncoder.setPosition(0.0)
+            self.zeroFindingAttemptsLeft -= 1
             if self.zeroFindingAttemptsLeft == 0:
-                # found the zero position
-                self.relativeEncoder.setPosition(0.0)
-                self.pidController = self.motor.getClosedLoopController()
+                self.pidController = self.motor.getClosedLoopController()  # found!
                 self.setPositionGoal(Constants.initialPositionGoal)
-            else:
-                # not done, but wait for 1/4 seconds before retrying
-                self.zeroFindingPauseUntil = now + 0.25
             return
 
         # otherwise, continue finding it
