@@ -65,8 +65,8 @@ class PhysicsEngine:
         """
 
         # Simulate the turret
-        if not self.turret.zeroFound:
-            self.turret.zeroFound = True
+        if self.turret.zeroFindingAttemptsLeft != 0:
+            self.turret.zeroFindingAttemptsLeft = 0
             self.turret_motor.setPosition(0.0)
             self.turret.pidController = self.turret.motor.getClosedLoopController()
             self.turret.setPositionGoal(0.0)

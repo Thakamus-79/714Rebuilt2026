@@ -5,11 +5,13 @@ from typing import List, Tuple
 from commands2 import Subsystem
 from rev import SparkBaseConfig, LimitSwitchConfig, SparkBase, SparkMax, ResetMode, PersistMode, ClosedLoopConfig, \
     FeedbackSensor
-from wpilib import SmartDashboard, RobotState
+from wpilib import SmartDashboard, RobotState, Timer
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Rotation2d, Translation2d, Pose2d
 
 from subsystems.drivesubsystem import DriveSubsystem
+
+ATTEMPTS_TO_FIND_ZERO = 2
 
 
 class Constants:
@@ -74,11 +76,12 @@ class Turret(Subsystem):
         """
         super().__init__()
 
-        self.zeroFound = False
         self.positionGoal = None
         self.display = display
         self.drivetrain = drivetrain
         self.turretLocationOnDrivetrain = turretLocationOnDrivetrain
+        self.zeroFindingAttemptsLeft = ATTEMPTS_TO_FIND_ZERO
+        self.zeroFindingPauseUntil = 0.0
         if display:
             assert self.drivetrain is not None, "if display=True, drivetrain must be provided (for estimating angles)"
 
@@ -109,13 +112,14 @@ class Turret(Subsystem):
 
 
     def forgetZero(self):
-        self.zeroFound = False
+        self.zeroFindingAttemptsLeft = ATTEMPTS_TO_FIND_ZERO
+        self.zeroFindingPauseUntil = 0.0
         self.pidController = None
         self.stopAndReset()
 
 
     def notReady(self) -> str:
-        if not self.zeroFound:
+        if self.zeroFindingAttemptsLeft != 0:
             return "turret zero not found"
         elif abs(self.positionGoal - self.getPosition()) > Constants.positionTolerance:
             return "turret not at target angle"
@@ -156,7 +160,7 @@ class Turret(Subsystem):
 
     def drive(self, speed, deadband=0.05, maxSpeedRPS=5.0):
         # 1. driving is not allowed in these situations
-        if not self.zeroFound and not Constants.calibrating:
+        if self.zeroFindingAttemptsLeft and not Constants.calibrating:
             return  # if we aren't calibrating, zero must be found first (before we can drive)
 
         # 2. speed is assumed to be between -1.0 and +1.0, with a deadband
@@ -178,19 +182,29 @@ class Turret(Subsystem):
 
     def findZero(self):
         # did we find the zero previously?
-        if self.zeroFound:
+        if self.zeroFindingAttemptsLeft == 0:
             return
         # are we calibrating the directions?
         if Constants.calibrating:
             return
+
         # did we find the zero just now?
-        if self.motor.getOutputCurrent() > Constants.findingZeroCurrentLimit:
-            self.zeroFound = True
-            self.stopAndReset()  # because the zero is found
-            self.relativeEncoder.setPosition(0.0)  # found the zero position
-            self.pidController = self.motor.getClosedLoopController()
-            self.setPositionGoal(Constants.initialPositionGoal)
+        now = Timer.getFPGATimestamp()
+        if now < self.zeroFindingPauseUntil:
             return
+        if self.motor.getOutputCurrent() > Constants.findingZeroCurrentLimit:
+            self.zeroFindingAttemptsLeft -= 1
+            self.stopAndReset()
+            if self.zeroFindingAttemptsLeft == 0:
+                # found the zero position
+                self.relativeEncoder.setPosition(0.0)
+                self.pidController = self.motor.getClosedLoopController()
+                self.setPositionGoal(Constants.initialPositionGoal)
+            else:
+                # not done, but wait for 1/4 seconds before retrying
+                self.zeroFindingPauseUntil = now + 0.25
+            return
+
         # otherwise, continue finding it
         if RobotState.isEnabled():
             speed = self.findingZeroRateLimiter.calculate(Constants.findingZeroSpeed)
@@ -203,7 +217,7 @@ class Turret(Subsystem):
 
 
     def getState(self) -> str:
-        if not self.zeroFound:
+        if self.zeroFindingAttemptsLeft != 0:
             return "finding"
         # otherwise, everything is ok
         return "ok"
@@ -216,7 +230,7 @@ class Turret(Subsystem):
         if self.display and self.drivetrain.field is not None:
             self.drawOnDashboardField(positionDegrees)
         # 1. do we need to find zero?
-        if not self.zeroFound:
+        if self.zeroFindingAttemptsLeft != 0:
             self.findZero()
         # 2. report to the dashboard
         SmartDashboard.putString("Turret/state", self.getState())
