@@ -281,9 +281,8 @@ class RobotContainer:
     def configureAutos(self):
         self.chosenAuto = wpilib.SendableChooser()
         # you can also set the default option, if needed
-        self.chosenAuto.setDefaultOption("1678", self.createAuto1678Right)
-        self.chosenAuto.addOption("left blue", self.getAutonomousLeftBlue)
-        self.chosenAuto.addOption("left red", self.getAutonomousLeftRed)
+        self.chosenAuto.setDefaultOption("1678 right", self.createAuto1678Right)
+        self.chosenAuto.setDefaultOption("1687 left", self.createAuto1678Left)
         self.chosenAuto.addOption("Test2", self.getAutonomousTest2Shooting)
         self.chosenAuto.addOption("Depot",self.getAutonmouseSlowintake)
         wpilib.SmartDashboard.putData("Chosen Auto", self.chosenAuto)
@@ -330,6 +329,48 @@ class RobotContainer:
         return (setStartPose
                 .andThen(driveAndPickUp)
                 .andThen(driveInReverse).andThen(shootWhenReady))
+
+    def createAuto1678Left(self):
+        setStartPose = ConditionalCommand(
+            ResetXY(x=12.96, y=0.652, headingDegrees=+180, drivetrain=self.robotDrive),
+            ResetXY(x=3.490, y=7.49, headingDegrees=+0, drivetrain=self.robotDrive),
+            lambda: DriverStation.getAlliance() == DriverStation.Alliance.kRed
+        )
+
+        speed = 0.9
+
+        driveTrajectory = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=speed,
+            waypoints=[
+                (2.532, 5.555, -40),
+                (2.907, 7.425, 0),
+                (4.641, 7.425, 0),
+                (6.426, 7.425, 0),
+                (7.992, 6.422,-140),# next waypoint
+
+            ],
+            endpoint=(7.759, 4.572, -140),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=True,  # to keep driving onto next command, set =False
+            swerve=True,
+        )
+        scoringWhenReady = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+        ).withTimeout(5.0)
+
+        pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
+        driveAndPickUp = driveTrajectory.deadlineFor(pickUp)  # .alongWith
+        driveInReverse = driveTrajectory.reversed()
+
+        return (setStartPose
+                .andThen(driveAndPickUp)
+                .andThen(driveInReverse).andThen(scoringWhenReady))
+
 
 
     def getAutonomousTest2Shooting(self):
@@ -434,27 +475,6 @@ class RobotContainer:
         stopIntake = InstantCommand(lambda: self.intake.setVelocityGoal(0, 0000))
         command = (setStartPose.andThen(shootWhenReady).andThen(startIntake).andThen(drivetoball)
                    .andThen(stopIntake).andThen(shootafterIntake))
-        return command
-
-
-
-
-
-
-    def getAutonomousLeftBlue(self):
-        setStartPose = ResetXY(x=0.783, y=6.686, headingDegrees=+60, drivetrain=self.robotDrive)
-        driveForward = commands2.RunCommand(lambda: self.robotDrive.arcadeDrive(xSpeed=1.0, rot=0.0), self.robotDrive)
-        stop = commands2.InstantCommand(lambda: self.robotDrive.arcadeDrive(0, 0))
-
-        command = setStartPose.andThen(driveForward.withTimeout(1.0)).andThen(stop)
-        return command
-
-    def getAutonomousLeftRed(self):
-        setStartPose = ResetXY(x=15.777, y=4.431, headingDegrees=-120, drivetrain=self.robotDrive)
-        driveForward = commands2.RunCommand(lambda: self.robotDrive.arcadeDrive(xSpeed=1.0, rot=0.0), self.robotDrive)
-        stop = commands2.InstantCommand(lambda: self.robotDrive.arcadeDrive(0, 0))
-
-        command = setStartPose.andThen(driveForward.withTimeout(2.0)).andThen(stop)
         return command
 
     def getAutonomousTrajectoryExample(self) -> commands2.Command:
