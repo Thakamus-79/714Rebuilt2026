@@ -15,7 +15,7 @@ from subsystems.drivesubsystem import DriveSubsystem
 class Constants:
     # other settings
     findingZeroSpeed = -0.11
-    stallCurrentLimit = 19 # amps (must be an integer for Rev)
+    stallCurrentLimit = 29 # amps (must be an integer for Rev)
     findingZeroCurrentLimit = stallCurrentLimit * 0.7
 
     # calibrating? (at first, set it =True and calibrate all the constants above)

@@ -13,6 +13,7 @@ from wpilib import XboxController, Servo, DriverStation
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
 
 from commands.drive_towards_object import SwerveTowardsObject
+from commands.intake import PickUp
 from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange
 from commands.aimtodirection import AimToDirection
 from commands.trajectory import SwerveTrajectory, SimpleTrajectory
@@ -83,6 +84,9 @@ class RobotContainer:
         )
         self.intake = Intake(
             inverted= False
+        )
+        self.intake_arm = IntakeArm(
+            leadMotorCANId=23, motorClass= SparkFlex
         )
 
         self.limelightLocalizer = LimelightLocalizer(self.robotDrive)
@@ -211,6 +215,10 @@ class RobotContainer:
         self.driverController.button(XboxController.Button.kA).whileTrue(
             getReady
         )
+
+        self.driverController.povLeft().onTrue(
+            InstantCommand(lambda: self.turret.forgetZero())
+        )
         # self.driverController.button(XboxController.Button.kA).onTrue(
         #     InstantCommand(lambda: self.shooter.setVelocityGoal(rpm=2000, rpmTolerance=200))
         # )
@@ -284,32 +292,42 @@ class RobotContainer:
     def createAuto1678Right(self):
         setStartPose = ConditionalCommand(
             ResetXY(x=12.96, y=7.49, headingDegrees=+180, drivetrain=self.robotDrive),
-            ResetXY(x=3.52, y=0.61, headingDegrees=+0, drivetrain=self.robotDrive),
+            ResetXY(x=1.626, y=0.587, headingDegrees=+0, drivetrain=self.robotDrive),
             lambda: DriverStation.getAlliance() == DriverStation.Alliance.kRed
         )
 
-        speed = 1.0
+        speed = .9
 
-        driveUnder = SimpleTrajectory(
+        driveTrajectory = SimpleTrajectory(
             drivetrain=self.robotDrive,
             speed=speed,
             waypoints=[
-                (2.50, 2.00, 45 + 180),
-                (3.00, 0.61, 0.0),
-                (5.00, 0.61, 0.0),
-                (7.30, 0.71, 40.0),
-                (8.30, 1.10, 80.0),  # next waypoint
-                (8.83, 2.16, 130.0),  # next waypoint
+                (1.807, 1.868, 40),
+                (3.140, 0.690, 0),
+                (5.326, 0.690, 0.0),
+                (6.594, 0.794, 12.0),
+                (7.448, 1.221, 39.121)# next waypoint
+
             ],
-            endpoint=(8.50, 3.80, 130.0),
+            endpoint=(7.746, 3.498, 110),
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=True,  # to keep driving onto next command, set =False
             swerve=True,
         )
+        shootWhenReady = GetReadyAndKeepShooting(
+            firingTable=self.firingTableRighWall,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+        ).withTimeout(2.0)
+        pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
+        driveAndPickUp = driveTrajectory.deadlineFor(pickUp)   # .alongWith
+        driveInReverse = driveTrajectory.reversed()
 
         return (setStartPose
-                .andThen(driveUnder)
-                .andThen(driveUnder.reversed()))
+                .andThen(driveAndPickUp)
+                .andThen(driveInReverse).andThen(shootWhenReady))
 
 
     def getAutonomousTest2Shooting(self):

@@ -41,7 +41,7 @@ class PhysicsEngine:
     def __init__(self, physics_controller: PhysicsInterface, robot: "MyRobot"):
         self.physics_controller = physics_controller
 
-        # Turret
+        # # Turret
         turret_gearbox = DCMotor.NEO(1)
         self.turret_motor = SparkFlexSim(robot.robotContainer.turret.motor, turret_gearbox)
         self.turret_encoder = SparkRelativeEncoderSim(robot.robotContainer.turret.motor)
@@ -64,7 +64,7 @@ class PhysicsEngine:
                         time that this function was called
         """
 
-        # Simulate the turret
+        # # Simulate the turret
         if not self.turret.zeroFound:
             self.turret.zeroFound = True
             self.turret_motor.setPosition(0.0)

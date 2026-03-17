@@ -39,7 +39,7 @@ class PickUp(commands2.Command):
         # start the rollers
         self.intake.setVelocityGoal(PickUpConstants.kPickupRollerSpeed, 0.0)
 
-    def end(self) -> None:
+    def end(self, interrupted) -> None:
         # TODO: when this command ends, stop the intake rollers and bring the arm up
         pass
 
@@ -72,7 +72,7 @@ class Eject(commands2.Command):
         # but then set the intake velocity the PickUpConstants.kEjectRollerSpeed (opposite direction)
         pass
 
-    def end(self) -> None:
+    def end(self, interrupted) -> None:
         # TODO: when this command ends, stop the intake rollers and bring the arm up
         pass
 
