@@ -302,11 +302,11 @@ class RobotContainer:
             drivetrain=self.robotDrive,
             speed=speed,
             waypoints=[
-                (1.807, 1.868, 40),
+                (1.807, 1.868, 220),
                 (3.140, 0.690, 0),
                 (5.326, 0.690, 0.0),
                 (6.594, 0.794, 12.0),
-                (7.448, 1.221, 39.121)# next waypoint
+                (7.448, 1.221, 39.121) # next waypoint
 
             ],
             endpoint=(7.746, 3.498, 110),
@@ -314,13 +314,15 @@ class RobotContainer:
             stopAtEnd=True,  # to keep driving onto next command, set =False
             swerve=True,
         )
+
         shootWhenReady = GetReadyAndKeepShooting(
-            firingTable=self.firingTableRighWall,
+            firingTable=self.firingTable,
             shooter=self.shooter,
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
-        ).withTimeout(2.0)
+        ).withTimeout(5.0)
+
         pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
         driveAndPickUp = driveTrajectory.deadlineFor(pickUp)   # .alongWith
         driveInReverse = driveTrajectory.reversed()

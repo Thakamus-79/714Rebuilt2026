@@ -8,8 +8,8 @@ class IndexerConstants:
     kFeederMotor2_CANID = 11
     kWashingMachine_CANID = 26
 
-    kTargetFeederVelocity = 1000.0,  # RPM (please calibrate!)
-    kWashingMachineVelocity = 100.0, # RPM (please calibrate!)
+    kTargetFeederVelocity = 1000.0  # RPM (please calibrate!)
+    kWashingMachineVelocity = 100.0  # RPM (please calibrate!)
 
     kFF = 21.8 / 10000
     kPFeeder = 0.6 / 10000
