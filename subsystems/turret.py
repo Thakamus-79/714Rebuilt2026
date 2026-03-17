@@ -12,6 +12,7 @@ from wpimath.geometry import Rotation2d, Translation2d, Pose2d
 from subsystems.drivesubsystem import DriveSubsystem
 
 ATTEMPTS_TO_FIND_ZERO = 2
+BOUNCE_PAUSE_SECONDS = 0.25
 
 
 class Constants:
@@ -194,8 +195,8 @@ class Turret(Subsystem):
             return
         if self.motor.getOutputCurrent() > Constants.findingZeroCurrentLimit:
             self.stopAndReset()
-            self.zeroFindingPauseUntil = now + 0.25
-            print(f"Finding turret zero: error={self.relativeEncoder.getPosition()}")
+            self.zeroFindingPauseUntil = now + BOUNCE_PAUSE_SECONDS
+            print(f"Finding the turret zero: error={self.relativeEncoder.getPosition()}")
             self.relativeEncoder.setPosition(0.0)
             self.zeroFindingAttemptsLeft -= 1
             if self.zeroFindingAttemptsLeft == 0:
