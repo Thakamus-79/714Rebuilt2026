@@ -6,7 +6,7 @@ import wpimath
 import wpilib
 import typing
 
-from commands2 import cmd, InstantCommand, RunCommand, ConditionalCommand, SelectCommand
+from commands2 import cmd, InstantCommand, RunCommand, ConditionalCommand, SelectCommand, WaitCommand
 from commands2.button import CommandGenericHID
 from rev import SparkMax, SparkFlex
 from wpilib import XboxController, Servo, DriverStation
@@ -16,6 +16,7 @@ from commands.drive_towards_object import SwerveTowardsObject
 from commands.intake import PickUp
 from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange
 from commands.aimtodirection import AimToDirection
+from commands.swervetopoint import SwerveToPoint
 from commands.trajectory import SwerveTrajectory, SimpleTrajectory
 from constants import AutoConstants, DriveConstants, OIConstants
 from subsystems import shooter
@@ -284,7 +285,7 @@ class RobotContainer:
         self.chosenAuto.setDefaultOption("1678 right", self.createAuto1678Right)
         self.chosenAuto.setDefaultOption("1678 left", self.createAuto1678Left)
         self.chosenAuto.addOption("Test2", self.getAutonomousTest2Shooting)
-        self.chosenAuto.addOption("Depot",self.getAutonmouseSlowintake)
+        self.chosenAuto.addOption("Depot",self.getAutonmouseDepotintake)
         wpilib.SmartDashboard.putData("Chosen Auto", self.chosenAuto)
 
 
@@ -304,8 +305,8 @@ class RobotContainer:
                 (1.807, 1.868, 220),
                 (3.140, 0.690, 0),
                 (5.326, 0.690, 0.0),
-                (6.594, 0.794, 12.0),
-                (7.448, 1.221, 39.121) # next waypoint
+                (6.718, 0.855, 60.0),
+                (7.746, 1.423, 90) # next waypoint
 
             ],
             endpoint=(7.746, 3.498, 110),
@@ -343,7 +344,7 @@ class RobotContainer:
             drivetrain=self.robotDrive,
             speed=speed,
             waypoints=[
-                (2.532, 5.555, -40),
+                (2.532, 5.555, 140),
                 (2.907, 7.425, 0),
                 (4.641, 7.425, 0),
                 (6.426, 7.425, 0),
@@ -425,10 +426,10 @@ class RobotContainer:
         .andThen(centerintake).andThen(finalShootingCMD))
         return command
 
-    def getAutonmouseSlowintake(self):
+    def getAutonmouseDepotintake(self):
         setStartPose = ConditionalCommand(
-            ResetXY(x=1.542, y=4.025, headingDegrees=+180, drivetrain=self.robotDrive),
-            ResetXY(x=AutoConstants.kFieldTags.getFieldLength() - 1.542, y=AutoConstants.kFieldTags.getFieldWidth() - 4.025, headingDegrees=0, drivetrain=self.robotDrive),
+            ResetXY(x=3.527, y=4.025, headingDegrees=+180, drivetrain=self.robotDrive),
+            ResetXY(x=AutoConstants.kFieldTags.getFieldLength() - 3.527, y=AutoConstants.kFieldTags.getFieldWidth() - 4.025, headingDegrees=0, drivetrain=self.robotDrive),
             lambda: DriverStation.getAlliance() == DriverStation.Alliance.kBlue
         )
         shootWhenReady = GetReadyAndKeepShooting(
@@ -443,22 +444,33 @@ class RobotContainer:
             drivetrain=self.robotDrive,
             speed=+1.0,
             waypoints=[
-                (1.921, 5.292, +180),
+                (3.133, 5.607, +180),
+                (2.118, 5.960, +180)
             ],
-            endpoint=(1.746, 6.00, +180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
+            endpoint=(1.058, 5.960, +180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=False,  # to keep driving onto next command, set =False
         ).andThen(SwerveTrajectory(
             drivetrain=self.robotDrive,
             speed=+0.5,
             waypoints=[
-                (0.904,6.036,+180)
+
             ],
-            endpoint=(0.623, 5.960,+180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
+            endpoint=(0.600, 5.960,+180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=True,  # to keep driving onto next command, set =False
         ))
-
+        intakeScoring = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=+0.5,
+            swerve= True,
+            waypoints=[
+                (1.930,5.348,+180)
+            ],
+            endpoint=(2.461, 4.024, +180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
+            flipIfRed=True,
+            stopAtEnd=True,
+        )
 
         shootafterIntake = GetReadyAndKeepShooting(
             firingTable=self.firingTable,
@@ -470,7 +482,7 @@ class RobotContainer:
 
         pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
         driveAndPickUp = drivetoball.deadlineFor(pickUp)
-        command = setStartPose.andThen(shootWhenReady).andThen(driveAndPickUp).andThen(shootafterIntake)
+        command = setStartPose.andThen(shootWhenReady).andThen(driveAndPickUp).andThen(intakeScoring).andThen(shootafterIntake)
         return command
 
     def getAutonomousTrajectoryExample(self) -> commands2.Command:
@@ -496,9 +508,64 @@ class RobotContainer:
         """
 
         # example commands that test drivetrain's motors and gyro (our only subsystem)
+        setZero = ResetXY(x=0 , y= 0 ,  headingDegrees =  0 , drivetrain=self.robotDrive)
+
         turnRight = AimToDirection(degrees=-45, drivetrain=self.robotDrive, speed=0.25)
         turnLeft = AimToDirection(degrees=45, drivetrain=self.robotDrive, speed=0.25)
         backToZero = AimToDirection(degrees=0, drivetrain=self.robotDrive, speed=0.0)
+        testGyro = turnRight.andThen(turnLeft).andThen(backToZero)
 
-        command = turnRight.andThen(turnLeft).andThen(backToZero)
+        squareDance = (
+            SwerveToPoint(x= 1, y= 0, headingDegrees= 0 , speed= 0.4 , drivetrain=self.robotDrive)
+        ).andThen(
+            SwerveToPoint( x= 1, y= -1, headingDegrees= 0 , speed= 0.4 , drivetrain=self.robotDrive)
+        ).andThen(
+            SwerveToPoint( x= 0, y= -1, headingDegrees= 0 , speed= 0.4 , drivetrain=self.robotDrive)
+        ).andThen(
+            SwerveToPoint( x= 0, y= 0, headingDegrees= 0 , speed= 0.4 , drivetrain=self.robotDrive)
+        )
+
+        testArmIntake = PickUp(intake=self.intake, arm=self.intake_arm).withTimeout(2)
+
+        startFeeder = InstantCommand(lambda: self.indexer.setFeederVelocityGoal(2000))
+        stopFeeder = InstantCommand(lambda: self.indexer.stop())
+        testFeeder = startFeeder.andThen(WaitCommand(2).andThen(stopFeeder))
+
+        startWasher = InstantCommand(lambda: self.indexer.setWashingMachineVelocityGoal(200))
+        stopWasher = InstantCommand(lambda: self.indexer.stop())
+        testWasher = startWasher.andThen(WaitCommand(2).andThen(stopWasher))
+
+        startShooter = InstantCommand(lambda: self.shooter.setVelocityGoal(2000, 200))
+        stopShooter = InstantCommand(lambda: self.shooter.stop())
+        testShooter = startShooter.andThen(WaitCommand(2).andThen(stopShooter))
+
+        liftHood = InstantCommand(lambda:self.shooter.setHoodServoGoal(1))
+        lowerHood = InstantCommand(lambda:self.shooter.setHoodServoGoal(0))
+        testHood = liftHood.andThen(WaitCommand(2).andThen(lowerHood))
+
+        turretRight = InstantCommand(lambda:self.turret.setAngleGoal(140))
+        turretLeft = InstantCommand(lambda:self.turret.setAngleGoal(220))
+        turretZeroPos = InstantCommand(lambda:self.turret.setAngleGoal(180))
+        testTurret = turretRight.andThen(
+            WaitCommand(2).andThen(turretLeft)
+        ).andThen(
+            WaitCommand(2).andThen(turretZeroPos)
+        )
+        command = setZero.andThen(
+            testGyro
+        ).andThen(
+            squareDance
+        ).andThen(
+            testArmIntake
+        ).andThen(
+            testWasher
+        ).andThen(
+            testFeeder
+        ).andThen(
+            testShooter
+        ).andThen(
+            testHood
+        ).andThen(
+            testTurret
+        )
         return command
