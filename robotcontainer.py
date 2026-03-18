@@ -282,7 +282,7 @@ class RobotContainer:
         self.chosenAuto = wpilib.SendableChooser()
         # you can also set the default option, if needed
         self.chosenAuto.setDefaultOption("1678 right", self.createAuto1678Right)
-        self.chosenAuto.setDefaultOption("1687 left", self.createAuto1678Left)
+        self.chosenAuto.setDefaultOption("1678 left", self.createAuto1678Left)
         self.chosenAuto.addOption("Test2", self.getAutonomousTest2Shooting)
         self.chosenAuto.addOption("Depot",self.getAutonmouseSlowintake)
         wpilib.SmartDashboard.putData("Chosen Auto", self.chosenAuto)
@@ -443,21 +443,18 @@ class RobotContainer:
             drivetrain=self.robotDrive,
             speed=+1.0,
             waypoints=[
-                (1.542, 4.025, +180),
-                (1.728, 4.431, +180),
-                (2.422, 5.206, +180),
-                (1.728, 5.754, +180)
+                (1.921, 5.292, +180),
             ],
-            endpoint=(1.361, 5.931, +180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
+            endpoint=(1.746, 6.00, +180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=False,  # to keep driving onto next command, set =False
         ).andThen(SwerveTrajectory(
             drivetrain=self.robotDrive,
             speed=+0.5,
             waypoints=[
-
+                (0.904,6.036,+180)
             ],
-            endpoint=(0.623, 5.931,+180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
+            endpoint=(0.623, 5.960,+180),  # end point: x=6.0, y=4.0, heading=180 degrees (South)
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=True,  # to keep driving onto next command, set =False
         ))
@@ -471,10 +468,9 @@ class RobotContainer:
             indexer=self.indexer,
         ).withTimeout(seconds=2.0)
 
-        startIntake = InstantCommand(lambda: self.intake.setVelocityGoal(2000, 1000))
-        stopIntake = InstantCommand(lambda: self.intake.setVelocityGoal(0, 0000))
-        command = (setStartPose.andThen(shootWhenReady).andThen(startIntake).andThen(drivetoball)
-                   .andThen(stopIntake).andThen(shootafterIntake))
+        pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
+        driveAndPickUp = drivetoball.deadlineFor(pickUp)
+        command = setStartPose.andThen(shootWhenReady).andThen(driveAndPickUp).andThen(shootafterIntake)
         return command
 
     def getAutonomousTrajectoryExample(self) -> commands2.Command:
