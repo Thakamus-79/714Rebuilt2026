@@ -70,7 +70,7 @@ class DriveConstants:
     kRearRightTurningCanId = 8
 
     kGyroReversed = -1  # can be +1 if not flipped (affects field-relative driving)
-    kUsePigeonCanId = 20
+    kUsePigeonCanId = 20  # set to -1, if you don't want to use Pigeon
 
 
 def getSwerveDrivingMotorConfig() -> SparkBaseConfig:
