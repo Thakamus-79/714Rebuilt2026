@@ -43,8 +43,8 @@ class PhysicsEngine:
 
         # # Turret
         turret_gearbox = DCMotor.NEO(1)
-        self.turret_motor = SparkFlexSim(robot.robotContainer.turret.revMotor, turret_gearbox)
-        self.turret_encoder = SparkRelativeEncoderSim(robot.robotContainer.turret.revMotor)
+        self.turret_motor = SparkFlexSim(robot.robotContainer.turret.motor, turret_gearbox)
+        self.turret_encoder = SparkRelativeEncoderSim(robot.robotContainer.turret.motor)
         self.turret = robot.robotContainer.turret
 
         # Shooter
@@ -68,7 +68,7 @@ class PhysicsEngine:
         if not self.turret.zeroFound:
             self.turret.zeroFound = True
             self.turret_motor.setPosition(0.0)
-            self.turret.revPidController = self.turret.revMotor.getClosedLoopController()
+            self.turret.revPidController = self.turret.motor.getClosedLoopController()
             self.turret.setPositionGoal(0.0)
         turret_dv = tm_diff * (self.turret.positionGoal - self.turret_motor.getPosition()) * TurretConstants.kP * 50.0
         self.turret_motor.setVelocity(turret_dv + self.turret_motor.getVelocity() * (1 - 10.0 * tm_diff))
