@@ -24,6 +24,8 @@ from rev import SparkMax, SparkFlex
 import navx
 
 
+GYRO_USING_INVERTED_Y_AXIS = False
+
 GYRO_OVERSHOOT_FRACTION = -3.25 / 360
 U_TURN = Rotation2d.fromDegrees(180)
 # ^^ our gyro didn't overshoot, it "undershot" by 0.1 degrees in a 360 degree turn
@@ -78,6 +80,7 @@ class DriveSubsystem(Subsystem):
         # Override for the direction where robot should point
         self.overrideControlsToFaceThisPoint: Translation2d | None = None
 
+        self.gyro: Pigeon2 | None = None
         if DriveConstants.kUsePigeonCanId >=0:
             self.gyro = Pigeon2(DriveConstants.kUsePigeonCanId)
         else:
@@ -310,7 +313,10 @@ class DriveSubsystem(Subsystem):
 
         :returns: the robot's heading as Rotation2d
         """
-        return Rotation2d.fromDegrees(self.gyro.get_yaw().value * DriveConstants.kGyroReversed)
+        if GYRO_USING_INVERTED_Y_AXIS:
+            return Rotation2d.fromDegrees(self.gyro.get_pitch().value * DriveConstants.kGyroReversed)
+        else:
+            return Rotation2d.fromDegrees(self.gyro.get_yaw().value * DriveConstants.kGyroReversed)
 
 
     def getTurnRate(self) -> float:
@@ -318,7 +324,10 @@ class DriveSubsystem(Subsystem):
 
         :returns: The turn rate of the robot, in degrees per second
         """
-        return self.gyro.get_angular_velocity_z_device().value * DriveConstants.kGyroReversed
+        if GYRO_USING_INVERTED_Y_AXIS:
+            return self.gyro.get_angular_velocity_y_device().value * DriveConstants.kGyroReversed
+        else:
+            return self.gyro.get_angular_velocity_z_device().value * DriveConstants.kGyroReversed
 
 
     def startOverrideToFaceThisPoint(self, point: Translation2d) -> bool:
