@@ -15,7 +15,7 @@ class ShooterConstants:
     kP = 5 / 10000
     kD = 0.0 / 10000
 
-    stallCurrentLimit = 40  # amps, and it must be integer for Rev
+    stallCurrentLimit = 160  # amps, and it must be integer for Rev
 
 
 class Shooter(Subsystem):
