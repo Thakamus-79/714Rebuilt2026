@@ -1,8 +1,12 @@
 # constants right here, to simplify
 import math
+import time
 from typing import List, Tuple
 
 from commands2 import Subsystem
+from phoenix6.configs import CANcoderConfiguration
+from phoenix6.hardware import CANcoder
+from phoenix6.signals import SensorDirectionValue
 from rev import SparkBaseConfig, LimitSwitchConfig, SparkBase, SparkMax, ResetMode, PersistMode, ClosedLoopConfig, \
     FeedbackSensor
 from wpilib import SmartDashboard, RobotState
@@ -15,11 +19,11 @@ from subsystems.drivesubsystem import DriveSubsystem
 class Constants:
     # other settings
     findingZeroSpeed = -0.11
-    stallCurrentLimit = 29 # amps (must be an integer for Rev)
+    stallCurrentLimit = 40 # amps (must be an integer for Rev)
     findingZeroCurrentLimit = stallCurrentLimit * 0.7
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
-    calibrating = True
+    calibrating = False
 
     # to calibrate, set calibrating = True above, and add this at the end of configureButtonBindings(...) in robotcontainer.py
     # self.driverController.button(XboxController.Button.kA).whileTrue(
@@ -34,35 +38,36 @@ class Constants:
     # (set findingZeroCurrentLimit to half of that value, set calibrating=False and your hood is ready)
 
     # which range of motion we want from this hood?
-    minPosition = 0.32  # motor revolutions
-    maxPosition = 6.08  # motor revolutions
+    minPosition = -10.0  # motor revolutions
+    maxPosition = 10.0  # motor revolutions
     positionTolerance = 0.0625  # motor revolutions
+    cancoderToPosition = -7.6328 / 2.5495
 
     # calibrated angles:
-    minPositionDegrees = +220.5  # how many degrees is the shooter's heading when turret is @ minPosition?
-    maxPositionDegrees = +139.5  # how many degrees is the shooter's heading when turret is @ maxPosition
+    maxPositionDegrees = +60.0  # how many degrees is the shooter's heading when turret is @ minPosition?
+    minPositionDegrees = 360 - 60.0  # how many degrees is the shooter's heading when turret is @ maxPosition
 
     # PID configuration (after you are done with calibrating=True)
-    kP = 0.2  # at first make it very small like this, then start tuning by increasing from there
+    kP = 0.1  # at first make it very small like this, then start tuning by increasing from there
     kD = 0.0  # at first start from zero, and when you know your kP you can start increasing kD from some small value >0
     kMaxOutput = 1.0
 
     kDegreesPerRotation = (maxPositionDegrees - minPositionDegrees) / (maxPosition - minPosition)
     kRotationsPerDegree = (maxPosition - minPosition) / (maxPositionDegrees - minPositionDegrees)
-    initialPositionGoal = maxPosition if abs(maxPosition) < abs(minPosition) else minPosition   # closest to zero
+    initialPositionGoal = 0.5 * (maxPosition + minPosition)
     sign = +1 if maxPositionDegrees > minPositionDegrees else -1
 
 
 assert Constants.minPositionDegrees != Constants.maxPositionDegrees
 assert abs(Constants.minPositionDegrees - Constants.maxPositionDegrees) < 360, "turret range of motion cannot be 360 or more degrees"
 assert Constants.minPosition < Constants.maxPosition
-assert Constants.maxPosition < 0 or Constants.minPosition > 0, "min/max position should either be both positive or both negative"
 
 
 class Turret(Subsystem):
     def __init__(
         self,
         leadMotorCANId: int,
+        canCoderCANId: int,
         drivetrain: DriveSubsystem | None,
         turretLocationOnDrivetrain: Translation2d | None,
         motorClass=SparkMax,
@@ -100,6 +105,24 @@ class Turret(Subsystem):
         self.pidController = None
         self.relativeEncoder = self.motor.getEncoder()  # this encoder can be used instead of absolute, if you know!
 
+        self.cancoder = None
+        if canCoderCANId >= 0:
+            self.zeroFound = True
+            self.cancoder = CANcoder(device_id=canCoderCANId)
+            #cancoderConfig = CANcoderConfiguration()
+            #cancoderConfig.magnet_sensor.sensor_direction = SensorDirectionValue.COUNTER_CLOCKWISE_POSITIVE
+            #self.cancoder.configurator.apply(cancoderConfig)
+            time.sleep(0.1)
+
+            positionFromCancoder = self.cancoder.get_position().value * Constants.cancoderToPosition
+            self.relativeEncoder.setPosition(positionFromCancoder)
+
+            self.pidController = self.motor.getClosedLoopController()
+        else:
+            assert Constants.maxPosition < 0 or Constants.minPosition > 0, (
+                "min/max position should either be both positive or both negative"
+            )
+
         # the logic of finding the zero needs to be a little smooth
         self.findingZeroRateLimiter = SlewRateLimiter(rateLimit=1.0 * Constants.findingZeroSpeed)
         self.findingZeroRateLimiter.reset(0.0)
@@ -109,6 +132,8 @@ class Turret(Subsystem):
 
 
     def forgetZero(self):
+        if self.cancoder is not None:
+            return  # zero is always available if you have a cancoder
         self.zeroFound = False
         self.pidController = None
         self.stopAndReset()
@@ -223,6 +248,7 @@ class Turret(Subsystem):
         SmartDashboard.putNumber("Turret/current", self.motor.getOutputCurrent())
         SmartDashboard.putNumber("Turret/goal", self.getPositionGoal())
         SmartDashboard.putNumber("Turret/pos", self.getPosition())
+        SmartDashboard.putNumber("Turret/cancoder", self.cancoder.get_position().value)
         SmartDashboard.putNumber("Turret/degreesGoal", goalDegrees)
         SmartDashboard.putNumber("Turret/degreesPos", positionDegrees)
 
