@@ -4,12 +4,12 @@ from wpilib import SmartDashboard
 
 
 class IndexerConstants:
-    kFeederMotor1_CANID = 10
-    kFeederMotor2_CANID = 11
+    kFeederMotor1_CANID = 11
+    kFeederMotor2_CANID = 10
     kWashingMachine_CANID = 26
 
-    kTargetFeederVelocity = 1000.0  # RPM (please calibrate!)
-    kWashingMachineVelocity = 100.0  # RPM (please calibrate!)
+    kTargetFeederVelocity = 4000.0  # RPM (please calibrate!)
+    kWashingMachineVelocity = 4000.0  # RPM (please calibrate!)
 
     kFF = 21.8 / 10000
     kPFeeder = 0.6 / 10000
@@ -17,7 +17,7 @@ class IndexerConstants:
     maxRPM = 6000
 
     kFeederCurrentLimit = 40  # amps, and it must be integer for Rev
-    kWashingMachineCurrentLimit = 20  # amps
+    kWashingMachineCurrentLimit = 40  # amps
 
 
 class Indexer(Subsystem):
