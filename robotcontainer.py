@@ -51,6 +51,7 @@ class RobotContainer:
         # tracks the location of goal posts for shooting, recommends firing angles and speeds
         self.turret = Turret(
             leadMotorCANId=12,
+            canCoderCANId=13,
             drivetrain=self.robotDrive,
             turretLocationOnDrivetrain=Translation2d(x=-0.0, y=0),
             motorClass=SparkFlex,
@@ -209,17 +210,8 @@ class RobotContainer:
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
         )
+        self.driverController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)
 
-        self.driverController.button(XboxController.Button.kA).whileTrue(
-            getReady
-        )
-
-        # self.driverController.button(XboxController.Button.kA).onTrue(
-        #     InstantCommand(lambda: self.shooter.setVelocityGoal(rpm=2000, rpmTolerance=200))
-        # )
-        # self.driverController.button(XboxController.Button.kA).onFalse(
-        #     InstantCommand(lambda: self.shooter.stop())
-        # )
 
 
         from commands.drive_towards_object import SwerveTowardsObject
@@ -241,24 +233,20 @@ class RobotContainer:
         self.driverController.povUp().onTrue(
             ResetXY(x=15.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive)
         )
-        self.driverController.button(1).onTrue(
-            ResetXY(x=15.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive)
-        )
-        self.driverController.button(2).whileTrue(
-            getReady
-        )
 
-        self.driverController.povLeft().onTrue(
-            InstantCommand(lambda: self.hoodServo.drive(0.06), self.hoodServo)
-        ).onFalse(
-            InstantCommand(lambda: self.hoodServo.stopAndReset(), self.hoodServo)
-        )
-
-        self.driverController.povRight().onTrue(
-            InstantCommand(lambda: self.hoodServo.drive(-0.06), self.hoodServo)
-        ).onFalse(
-            InstantCommand(lambda: self.hoodServo.stopAndReset(), self.hoodServo)
-        )
+        # from subsystems.indexer import IndexerConstants
+        #
+        # self.driverController.povLeft().onTrue(
+        #     InstantCommand(lambda: self.indexer.setFeederVelocityGoal(IndexerConstants.kTargetFeederVelocity))
+        # ).onFalse(
+        #     InstantCommand(lambda: self.indexer.stop())
+        # )
+        #
+        # self.driverController.button(XboxController.Button.kY).onTrue(
+        #     InstantCommand(lambda: self.indexer.setWashingMachineVelocityGoal(IndexerConstants.kWashingMachineVelocity))
+        # ).onFalse(
+        #     InstantCommand(lambda: self.indexer.stop())
+        # )
 
 
 

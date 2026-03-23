@@ -40,7 +40,7 @@ class Constants:
     # which range of motion we want from this hood?
     minPosition = -10.0  # motor revolutions
     maxPosition = 10.0  # motor revolutions
-    positionTolerance = 0.0625  # motor revolutions
+    positionTolerance = 0.16  # motor revolutions
     cancoderToPosition = -7.6328 / 2.5495
 
     # calibrated angles:
@@ -48,7 +48,7 @@ class Constants:
     minPositionDegrees = 360 - 60.0  # how many degrees is the shooter's heading when turret is @ maxPosition
 
     # PID configuration (after you are done with calibrating=True)
-    kP = 0.1  # at first make it very small like this, then start tuning by increasing from there
+    kP = 0.2  # at first make it very small like this, then start tuning by increasing from there
     kD = 0.0  # at first start from zero, and when you know your kP you can start increasing kD from some small value >0
     kMaxOutput = 1.0
 
@@ -84,6 +84,7 @@ class Turret(Subsystem):
         self.display = display
         self.drivetrain = drivetrain
         self.turretLocationOnDrivetrain = turretLocationOnDrivetrain
+        self.invalidGoal = ""
         if display:
             assert self.drivetrain is not None, "if display=True, drivetrain must be provided (for estimating angles)"
 
@@ -142,8 +143,10 @@ class Turret(Subsystem):
     def notReady(self) -> str:
         if not self.zeroFound:
             return "turret zero not found"
+        elif self.invalidGoal:
+            return self.invalidGoal
         elif abs(self.positionGoal - self.getPosition()) > Constants.positionTolerance:
-            return "turret not at target angle"
+            return "turret not at target angle" # + f": {self.positionGoal} vs {self.getPosition()} (tol={Constants.positionTolerance})"
         else:
             return ""
 
@@ -152,12 +155,15 @@ class Turret(Subsystem):
         goalRotations = toRotations(goalDegrees)
         # only set the rotation goal if it is between minimum and maximum allowed (otherwise stop and wait)
         if Constants.minPosition < goalRotations < Constants.maxPosition:
+            self.invalidGoal = ""
             self.setPositionGoal(goalRotations)
         else:
+            self.invalidGoal = f"invalid angle goal {goalDegrees} degrees"
             self.stopAndReset()
 
 
     def setPositionGoal(self, goal: float) -> None:
+        self.invalidGoal = ""
         if goal < Constants.minPosition:
             goal = Constants.minPosition
         if goal > Constants.maxPosition:
