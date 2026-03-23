@@ -1,4 +1,6 @@
 # constants right here, to simplify
+import math
+
 from commands2 import Subsystem
 from phoenix6.configs import TalonFXConfiguration, Slot0Configs, CurrentLimitsConfigs
 from phoenix6.controls import PositionVoltage
@@ -13,7 +15,7 @@ from wpimath.filter import SlewRateLimiter
 class Constants:
     # other settings
     motorInverted = False
-    findingZeroSpeed = 0.14
+    findingZeroSpeed = 0.06  # for Rev please use 0.14
     stallCurrentLimit = 12  # amps (must be an integer for Rev)
     findingZeroCurrentLimit = stallCurrentLimit * 0.7
 
@@ -33,10 +35,10 @@ class Constants:
     # (set findingZeroCurrentLimit to half of that value, set calibrating=False and your hood is ready)
 
     # which range of motion we want from this hood?
-    minPosition = -8.0  # motor revolutions
-    maxPosition = -0.5  # motor revolutions
+    minPosition = -0.8  # motor revolutions
+    maxPosition = -0.1  # motor revolutions
     initialPositionGoal = maxPosition   # closest to zero (out of the two)
-    positionTolerance = 0.0625  # motor revolutions
+    positionTolerance = 0.01  # motor revolutions
 
     # PID configuration (after you are done with calibrating=True)
     kP = 0.4  # at first make it very small like this, then start tuning by increasing from there
@@ -64,7 +66,7 @@ class Hood(Subsystem):
         self.revEncoder: SparkRelativeEncoder | None = None
 
         self.talonMotor: TalonFX | None = None
-        self.talonPositionRequest = PositionVoltage(0).with_slot(0)
+        self.talonPositionRequest = PositionVoltage(0, slot=0)
 
         # initialize the motors and switches
         if motorClass == TalonFX:
@@ -82,6 +84,7 @@ class Hood(Subsystem):
         # initialize pid controller and encoder(s)
 
         # the logic of finding the zero needs to be a little smooth
+        assert Constants.findingZeroSpeed > 0
         self.findingZeroRateLimiter = SlewRateLimiter(rateLimit=1.0 * Constants.findingZeroSpeed)
         self.findingZeroRateLimiter.reset(0.0)
 
@@ -146,6 +149,7 @@ class Hood(Subsystem):
 
 
     def drive(self, speed, deadband=0.05, maxSpeedRPS=5.0):
+        print(f"Hood:drive(entering, speed={speed})")
         # 1. driving is not allowed in these situations
         if not self.zeroFound and not Constants.calibrating:
             return  # if we aren't calibrating, zero must be found first (before we can drive)
@@ -160,6 +164,7 @@ class Hood(Subsystem):
         elif self.revMotor is not None:
             self.revMotor.set(speed)  # if we don't we have PID control, we use a speed setpoint
         else:
+            print(f"Hood:drive(speed={speed})")
             self.talonMotor.set(speed)
 
 
@@ -180,13 +185,15 @@ class Hood(Subsystem):
         # are we calibrating the directions?
         if Constants.calibrating:
             return
+
         # did we find the zero just now?
-        currentSpike = False
+        spike = False
         if self.revMotor is not None and self.revMotor.getOutputCurrent() > Constants.findingZeroCurrentLimit:
-            currentSpike = True
-        if self.talonMotor is not None and self.talonMotor.get_stator_current() > Constants.findingZeroCurrentLimit:
-            currentSpike = True
-        if currentSpike:
+            spike = True
+        if self.talonMotor is not None and self.talonMotor.get_stator_current().value > Constants.findingZeroCurrentLimit:
+            spike = True
+
+        if spike:
             self.zeroFound = True
             self.stopAndReset()
             if self.revMotor is not None:
@@ -196,12 +203,14 @@ class Hood(Subsystem):
                 self.talonMotor.set_position(0.0)
             self.setPositionGoal(Constants.initialPositionGoal)
             return
+
         # otherwise, continue finding it
         if RobotState.isEnabled():
             speed = self.findingZeroRateLimiter.calculate(Constants.findingZeroSpeed)
             SmartDashboard.putNumber("Hood/findingSpeed", speed)
             motor = self.revMotor or self.talonMotor
-            motor.set(speed)
+            motor.set(math.copysign(speed, -Constants.minPosition))
+            # ^^ if minPosition is negative, positive speed is needed for homing (and vice versa)
         else:
             self.findingZeroRateLimiter.reset(0.0)
             SmartDashboard.putNumber("Hood/findingSpeed", 0.0)
@@ -222,7 +231,12 @@ class Hood(Subsystem):
             self.findZero()
         # 2. report to the dashboard
         SmartDashboard.putString("Hood/state", self.getState())
-        SmartDashboard.putNumber("Hood/current", self.revMotor.getOutputCurrent())
+        if self.revMotor is not None:
+            SmartDashboard.putNumber("Hood/current", self.revMotor.getOutputCurrent())
+        elif self.talonMotor is not None:
+            SmartDashboard.putNumber("Hood/current", (
+                    self.talonMotor.get_stator_current().value + self.talonMotor.get_supply_current().value
+            ))
         SmartDashboard.putNumber("Hood/goal", self.getPositionGoal())
         SmartDashboard.putNumber("Hood/pos", self.getPosition())
 
@@ -244,33 +258,19 @@ def _revMotorConfig(relPositionFactor: float = 1.0) -> SparkBaseConfig:
 
 
 def _configureTalonMotor(motor: TalonFX) -> None:
-    cfg = TalonFXConfiguration()
-    cfg.motor_output.neutral_mode = NeutralModeValue.BRAKE
-    cfg.motor_output.inverted = (
-        InvertedValue.CLOCKWISE_POSITIVE
-        if Constants.motorInverted
-        else InvertedValue.COUNTER_CLOCKWISE_POSITIVE
+    config = TalonFXConfiguration()
+    config.motor_output.neutral_mode = NeutralModeValue.BRAKE
+    config.motor_output.inverted = (
+        InvertedValue.CLOCKWISE_POSITIVE if Constants.motorInverted else InvertedValue.COUNTER_CLOCKWISE_POSITIVE
     )
-    motor.configurator.apply(cfg)
-
-    slot = Slot0Configs()
-    (
-        slot
-        .with_k_p(Constants.kP)
-        .with_k_i(0)
-        .with_k_d(0)
-        .with_k_s(0)
-        .with_k_v(0)
-        .with_k_a(0)
-    )
-    motor.configurator.apply(slot)
+    config.slot0.k_p = 100 * Constants.kP
+    config.slot0.k_i = 0
+    config.slot0.k_d = 0
+    motor.configurator.apply(config)
 
     current = CurrentLimitsConfigs()
-    (
-        current
-        .with_supply_current_limit(Constants.stallCurrentLimit)
-        .with_stator_current_limit(Constants.stallCurrentLimit)
-        .with_supply_current_limit_enable(True)
-        .with_stator_current_limit_enable(True)
-    )
+    current.stator_current_limit = Constants.stallCurrentLimit
+    current.stator_current_limit_enable = True
+    current.supply_current_limit = Constants.stallCurrentLimit
+    current.supply_current_limit_enable = True
     motor.configurator.apply(current)

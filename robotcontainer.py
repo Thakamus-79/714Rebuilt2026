@@ -8,6 +8,7 @@ import typing
 
 from commands2 import cmd, InstantCommand, RunCommand, ConditionalCommand, SelectCommand, WaitCommand
 from commands2.button import CommandGenericHID
+from phoenix6.hardware import TalonFX
 from rev import SparkMax, SparkFlex
 from wpilib import XboxController, Servo, DriverStation
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
@@ -75,9 +76,8 @@ class RobotContainer:
             minimumRangeMeters=2.0,
             maximumRangeMeters=3.0,
         )
-        self.hoodServo = Servo(
-            channel=0
-        )
+        #self.hoodServo = Servo(channel=0)
+        self.hoodServo = Hood(leadMotorCANId=42, motorClass=TalonFX)
         self.indexer = Indexer()
         self.shooter = Shooter(
             inverted= False,
@@ -112,9 +112,6 @@ class RobotContainer:
         # )
 
         self.pickupCamera = LimelightCamera("limelight-intake")
-
-
-        self.hood = None #Hood(leadMotorCANId=43, motorClass= SparkMax)
 
 
 
@@ -217,9 +214,6 @@ class RobotContainer:
             getReady
         )
 
-        self.driverController.povLeft().onTrue(
-            InstantCommand(lambda: self.turret.forgetZero())
-        )
         # self.driverController.button(XboxController.Button.kA).onTrue(
         #     InstantCommand(lambda: self.shooter.setVelocityGoal(rpm=2000, rpmTolerance=200))
         # )
@@ -243,16 +237,6 @@ class RobotContainer:
             dontSwitchToSmallerObject=True,
         )
 
-        # self.driverController.button(XboxController.Button.kX).whileTrue(
-        #     InstantCommand(lambda: self.hood.forgetZero(), self.hood)
-        # )
-        #
-        # self.driverController.button(XboxController.Button.kA).whileTrue(
-        #     # will this make the hood go towards its zero, until it hits it and hits max current?
-        #     InstantCommand(lambda: self.turret.setAngleGoal(170), self.turret)
-        # )
-
-
         # temporary hack for shooter practice: POV Up button puts the robot facing the red hub with its shooter
         self.driverController.povUp().onTrue(
             ResetXY(x=15.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive)
@@ -264,8 +248,18 @@ class RobotContainer:
             getReady
         )
 
+        self.driverController.povLeft().onTrue(
+            InstantCommand(lambda: self.hoodServo.drive(0.06), self.hoodServo)
+        ).onFalse(
+            InstantCommand(lambda: self.hoodServo.stopAndReset(), self.hoodServo)
+        )
 
-        
+        self.driverController.povRight().onTrue(
+            InstantCommand(lambda: self.hoodServo.drive(-0.06), self.hoodServo)
+        ).onFalse(
+            InstantCommand(lambda: self.hoodServo.stopAndReset(), self.hoodServo)
+        )
+
 
 
     def disablePIDSubsystems(self) -> None:

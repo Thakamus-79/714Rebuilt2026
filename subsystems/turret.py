@@ -19,7 +19,7 @@ class Constants:
     findingZeroCurrentLimit = stallCurrentLimit * 0.7
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
-    calibrating = False
+    calibrating = True
 
     # to calibrate, set calibrating = True above, and add this at the end of configureButtonBindings(...) in robotcontainer.py
     # self.driverController.button(XboxController.Button.kA).whileTrue(

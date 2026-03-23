@@ -3,6 +3,9 @@ from rev import SparkBaseConfig, SparkBase, SparkFlex, ResetMode, PersistMode
 from wpilib import SmartDashboard, Servo
 from typing import List
 
+from subsystems.hood import Hood
+
+
 class ShooterConstants:
     kShooterMotorA_CANID = 41
     kShooterMotorB_CANID = 40
@@ -29,7 +32,7 @@ class Shooter(Subsystem):
     ```
 
     """
-    def __init__(self, inverted=True, hoodServos: List[Servo] = ()) -> None:
+    def __init__(self, inverted=True, hoodServos: List[Servo | Hood] = ()) -> None:
         super().__init__()
 
         self.hoodServos = hoodServos
