@@ -59,7 +59,7 @@ class Indexer(Subsystem):
 
         self.washingMachineMotor = motorClass(IndexerConstants.kWashingMachine_CANID, SparkBase.MotorType.kBrushless)
         self.washingMachineMotor.configure(
-            _motorConfig(IndexerConstants.kFF, IndexerConstants.kPWashingMachine, IndexerConstants.kWashingMachineCurrentLimit),
+            _motorConfig(IndexerConstants.kFF, IndexerConstants.kPWashingMachine, None),
             ResetMode.kResetSafeParameters,
             PersistMode.kPersistParameters,
         )
@@ -79,8 +79,9 @@ class Indexer(Subsystem):
         self.feederController2.setReference(-self.feederVelocityGoal, SparkBase.ControlType.kVelocity)
 
     def setWashingMachineVelocityGoal(self, rpm):
-        self.washingMachineVelocityGoal = max(IndexerConstants.maxRPM, min(IndexerConstants.maxRPM, rpm))
-        self.washingMachineController.setReference(self.washingMachineVelocityGoal, SparkBase.ControlType.kVelocity)
+        self.washingMachineController.setReference(0.7, SparkBase.ControlType.kDutyCycle)
+        #self.washingMachineVelocityGoal = max(IndexerConstants.maxRPM, min(IndexerConstants.maxRPM, rpm))
+        #self.washingMachineController.setReference(self.washingMachineVelocityGoal, SparkBase.ControlType.kVelocity)
 
 
     def getFeederVelocity(self):
@@ -124,5 +125,6 @@ def _motorConfig(kFF, kP, currentLimit) -> SparkBaseConfig:
     config.closedLoop.pid(kP, 0.0, 0.0)
     config.closedLoop.velocityFF(kFF)
     config.closedLoop.outputRange(-1, +1)
-    config.smartCurrentLimit(currentLimit)
+    if currentLimit is not None:
+        config.smartCurrentLimit(currentLimit)
     return config
