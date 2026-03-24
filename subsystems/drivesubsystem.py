@@ -362,7 +362,8 @@ class DriveSubsystem(Subsystem):
         if not vectorToTarget.squaredNorm() > 0:
             return 0.0
         targetDirection = vectorToTarget.angle()
-        degreesRemainingToTurn = (targetDirection - pose.rotation()).degrees()
+        shooterDirection = pose.rotation() + U_TURN
+        degreesRemainingToTurn = (targetDirection - shooterDirection).degrees()
 
         # (do not turn left 350 degrees if you can just turn right -10 degrees, and vice versa)
         while degreesRemainingToTurn > 180:
