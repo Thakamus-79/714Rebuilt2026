@@ -77,7 +77,7 @@ class Shooter(Subsystem):
             return ""  # shooter is ready
 
     def setHoodServoGoal(self, goal):
-        #self.hoodServoGoal = max(0.0, min(1.0, goal))
+        self.hoodServoGoal = goal
         SmartDashboard.putNumber("Shooter/hoodServoGoal", goal)
         for s in self.hoodServos:
             s.set(self.hoodServoGoal)
