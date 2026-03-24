@@ -9,8 +9,8 @@ from wpimath.filter import SlewRateLimiter
 class Constants:
     # other settings
     motorInverted = False
-    findingZeroSpeed = 0.14
-    stallCurrentLimit = 12  # amps (must be an integer for Rev)
+    findingZeroSpeed = 0.5
+    stallCurrentLimit = 50  # amps (must be an integer for Rev)
     findingZeroCurrentLimit = stallCurrentLimit * 0.7
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
@@ -29,13 +29,13 @@ class Constants:
     # (set findingZeroCurrentLimit to half of that value, set calibrating=False and your hood is ready)
 
     # which range of motion we want from this hood?
-    minPosition = -8.0  # motor revolutions
-    maxPosition = -0.5  # motor revolutions
-    initialPositionGoal = maxPosition   # closest to zero (out of the two)
+    minPosition = -28.0  # motor revolutions
+    maxPosition = -1.0  # motor revolutions
+    initialPositionGoal = -15.0   # closest to zero (out of the two)
     positionTolerance = 0.0625  # motor revolutions
 
     # PID configuration (after you are done with calibrating=True)
-    kP = 0.02  # at first make it very small like this, then start tuning by increasing from there
+    kP = 0.0  # at first make it very small like this, then start tuning by increasing from there
     kD = 0.0  # at first start from zero, and when you know your kP you can start increasing kD from some small value >0
     kMaxOutput = 1.0
 
@@ -152,7 +152,9 @@ class IntakeArm(Subsystem):
         if Constants.calibrating:
             return
         # did we find the zero just now?
-        if self.motor.getOutputCurrent() > Constants.findingZeroCurrentLimit:
+        current = self.motor.getOutputCurrent()
+        if current > Constants.findingZeroCurrentLimit:
+            print(f"IntakeArm home found with current={current}")
             self.zeroFound = True
             self.stopAndReset()  # because the zero is found
             self.relativeEncoder.setPosition(0.0)  # found the zero position
@@ -202,6 +204,6 @@ def _getLeadMotorConfig(
     config.closedLoop.pid(Constants.kP, 0.0, Constants.kD)
     config.closedLoop.velocityFF(0.0)
     config.closedLoop.outputRange(-Constants.kMaxOutput, +Constants.kMaxOutput)
-    config.smartCurrentLimit(Constants.stallCurrentLimit)
+    #config.smartCurrentLimit(Constants.stallCurrentLimit)
     config.inverted(inverted)
     return config
