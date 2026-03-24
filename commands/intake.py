@@ -22,7 +22,7 @@ class PickUp(commands2.Command):
     """
     def __init__(self, intake: Intake, arm: IntakeArm):
         super().__init__()
-        self.intake = intake
+        self.intakeRollers = intake
         self.arm = arm
         self.addRequirements(intake)
         self.addRequirements(arm)
@@ -35,15 +35,15 @@ class PickUp(commands2.Command):
 
     def start(self):
         # bring the arm down to its lowest position
-        self.arm.setPositionGoal(IntakeArmConstants.minPosition)
+        self.arm.setPositionGoal(IntakeArmConstants.deployedPosition)
         # start the rollers
-        self.intake.setVelocityGoal(PickUpConstants.kPickupRollerSpeed, 0.0)
+        self.intakeRollers.setVelocityGoal(PickUpConstants.kPickupRollerSpeed, 0.0)
 
     def end(self, interrupted) -> None:
         # bring the arm down to its lowest position
-        self.arm.setPositionGoal(IntakeArmConstants.maxPosition)
+        self.arm.setPositionGoal(IntakeArmConstants.partlyUpPosition)
         # start the rollers
-        self.intake.setVelocityGoal(0, 0.0)
+        self.intakeRollers.setVelocityGoal(0, 0.0)
 
 
 class Eject(commands2.Command):
@@ -71,15 +71,43 @@ class Eject(commands2.Command):
 
     def start(self):
         # bring the arm down to its lowest position
-        self.arm.setPositionGoal(IntakeArmConstants.minPosition)
+        self.arm.setPositionGoal(IntakeArmConstants.deployedPosition)
         # start the rollers
         self.intake.setVelocityGoal(-PickUpConstants.kPickupRollerSpeed, 0.0)
 
     def end(self, interrupted) -> None:
         # bring the arm down to its lowest position
-        self.arm.setPositionGoal(IntakeArmConstants.maxPosition)
+        self.arm.setPositionGoal(IntakeArmConstants.partlyUpPosition)
         # start the rollers
         self.intake.setVelocityGoal(0, 0.0)
+
+
+class SuppressIntake(commands2.Command):
+    """
+    Usage example:
+
+    pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
+    ...
+
+    self.driverController.buttons(XboxController.Button.kA).whileTrue(pickUp)
+    """
+    def __init__(self, arm: IntakeArm):
+        super().__init__()
+        self.arm = arm
+        self.addRequirements(arm)
+
+    def isFinished(self) -> bool:
+        return True  # never finishes on its own (maybe this will change when we install a rangefinder)
+
+    def execute(self) -> None:
+        return  # there is nothing to do while the command is running
+
+    def start(self):
+        # bring the arm down to its lowest position
+        self.arm.setPositionGoal(IntakeArmConstants.minPosition)
+
+    def end(self, interrupted) -> None:
+        pass
 
 
 class Shake(commands2.Command):
@@ -108,6 +136,6 @@ class Shake(commands2.Command):
         phase = (t / self.intervalSeconds) % 1.0
         # ^^ this phase oscillates between 0.0 and 0.99999, the arm will go up when phase<0.5 and go down otherwise
         if phase < 0.5:
-            self.arm.setPositionGoal(0.8 * IntakeArmConstants.minPosition + 0.2 * IntakeArmConstants.maxPosition)
+            self.arm.setPositionGoal(IntakeArmConstants.maxPosition)
         else:
-            self.arm.setPositionGoal(0.2 * IntakeArmConstants.minPosition + 0.8 * IntakeArmConstants.maxPosition)
+            self.arm.setPositionGoal(IntakeArmConstants.partlyUpPosition)

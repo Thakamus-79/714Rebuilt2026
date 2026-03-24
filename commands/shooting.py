@@ -19,6 +19,9 @@ class Constants:
     RANGE_TOLERANCE_METERS = 0.1
 
 
+class KeepHoodDown(commands2.Command):
+    pass
+
 class GetInRange(commands2.Command):
     """
     Simple example:

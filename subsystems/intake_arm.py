@@ -31,8 +31,9 @@ class Constants:
     # which range of motion we want from this hood?
     maxPosition = -1.0  # motor revolutions
     minPosition = -48.0  # motor revolutions
+    deployedPosition = -11.0  # motor revolutions
     partlyUpPosition = -39.0
-    initialPositionGoal = -39.0
+    initialPositionGoal = partlyUpPosition
     positionTolerance = 0.0625  # motor revolutions
 
     # PID configuration (after you are done with calibrating=True)
