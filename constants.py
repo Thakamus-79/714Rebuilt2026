@@ -104,7 +104,7 @@ def getSwerveTurningMotorConfig(turnMotorInverted: bool) -> SparkBaseConfig:
 
 
 class ModuleConstants:
-    kDrivingMotorIsTalon = False
+    kDrivingMotorIsTalon = True
 
     # WATCH OUT:
     #  - one or both of two constants below need to be flipped from True to False (by trial and error)
