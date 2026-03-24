@@ -4,15 +4,16 @@ from wpilib import SmartDashboard, Servo
 
 
 class IntakeConstants:
-    kIntakeMotorA_CANID = 51 # Can ID not choosen yet
-    kIntakeMotorB_CANID = 50 # Can ID not choosen yet
+    kIntakeMotorA_CANID = 50 # Can ID not choosen yet
+    kIntakeMotorB_CANID = 51 # Can ID not choosen yet
 
     maxRPM = 6000
     kFF = 18.5 / 10000
-    kP = 0.25 / 10000
+    kP = 2.0 / 10000
     kD = 0.0 / 10000
+    targetRPM = -1500
 
-    stallCurrentLimit = 30  # amps, and it must be integer for Rev
+    stallCurrentLimit = 50  # amps, and it must be integer for Rev
 
 
 class Intake(Subsystem):
