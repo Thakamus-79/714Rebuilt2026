@@ -14,29 +14,15 @@ from constants import LookupTable
 
 # TODO : calibrate this lookup table on a real robot, and add more points
 RECOMMENDED_SHOOTER_RPM_BY_DISTANCE = LookupTable({
-    1.97 : 3500, # if distance is 1m, spin at 2000 rpm
-    2.01 : 3750,
-    2.06 : 3750,
-    2.10 : 4000,
-    2.14 : 4000,
-    2.18 : 4250,
-    2.23 : 4250,
-    2.30 : 4500,
-    2.34 : 4500,
-    2.38 : 4750,
-    2.41 : 5250,
-    2.46 : 5500,
-    2.50 : 5750,
-    3.10 : 6000
+    1.97 : 2500, # if distance is 1m, spin at 2500 rpm
 
    # if distance is 12m, spin at 6000 rpm
 })
 
 # TODO : calibrate this lookup table on a real robot, and add more points
 RECOMMENDED_SHOOTER_HOOD_POSITION_BY_DISTANCE = LookupTable({
-    1.0 : 0.0,  # if distance is 1m, hood position 0.0 (firing very vertically)
-    2.0 : 0.5,  # if distance is 2m, hood position 0.5 (firing at around 60 degrees)
-    12.0 : 1.0,  # if distance is 12m, hood position 1.0 (firing at close to 45 degrees)
+    1.97 : -0.1,  # if distance is 1m, hood position -0.1 (firing very vertically)
+    5.0 : -0.8,  # if distance is 12m, hood position -0.8 (firing very horizontally)
 })
 
 
@@ -83,8 +69,8 @@ class FiringTable(Subsystem):
         if FiringTable.hoodPos is None:
             FiringTable.hoodPos = SendableChooser()
             FiringTable.hoodPos.setDefaultOption("lookup", None)
-            for f in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-                FiringTable.hoodPos.addOption(str(f), f)
+            for f in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]:
+                FiringTable.hoodPos.addOption(str(-f), -f)
             SmartDashboard.putData("FiringTable/hoodPosChosen", FiringTable.hoodPos)
 
         self.resetSmartDashboard()
