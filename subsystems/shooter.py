@@ -11,8 +11,8 @@ class ShooterConstants:
     kShooterMotorB_CANID = 40
 
     maxRPM = 5700
-    kFF = 18.5 / 10000
-    kP = 5 / 10000
+    kFF = 18.5 * 1.1 / 10000  # 18.5 / 10000
+    kP = 20.0 / 10000
     kD = 0.0 / 10000
 
     stallCurrentLimit = 160  # amps, and it must be integer for Rev
