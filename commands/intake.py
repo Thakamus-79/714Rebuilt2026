@@ -35,13 +35,15 @@ class PickUp(commands2.Command):
 
     def start(self):
         # bring the arm down to its lowest position
-        self.arm.setPositionGoal(IntakeArmConstants.maxPosition)
+        self.arm.setPositionGoal(IntakeArmConstants.minPosition)
         # start the rollers
         self.intake.setVelocityGoal(PickUpConstants.kPickupRollerSpeed, 0.0)
 
     def end(self, interrupted) -> None:
-        # TODO: when this command ends, stop the intake rollers and bring the arm up
-        pass
+        # bring the arm down to its lowest position
+        self.arm.setPositionGoal(IntakeArmConstants.maxPosition)
+        # start the rollers
+        self.intake.setVelocityGoal(0, 0.0)
 
 
 class Eject(commands2.Command):
@@ -68,13 +70,16 @@ class Eject(commands2.Command):
         return  # there is nothing to do while the command is running
 
     def start(self):
-        # TODO: bring the arm down to its lowest position
-        # but then set the intake velocity the PickUpConstants.kEjectRollerSpeed (opposite direction)
-        pass
+        # bring the arm down to its lowest position
+        self.arm.setPositionGoal(IntakeArmConstants.minPosition)
+        # start the rollers
+        self.intake.setVelocityGoal(-PickUpConstants.kPickupRollerSpeed, 0.0)
 
     def end(self, interrupted) -> None:
-        # TODO: when this command ends, stop the intake rollers and bring the arm up
-        pass
+        # bring the arm down to its lowest position
+        self.arm.setPositionGoal(IntakeArmConstants.maxPosition)
+        # start the rollers
+        self.intake.setVelocityGoal(0, 0.0)
 
 
 class Shake(commands2.Command):
