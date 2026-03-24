@@ -257,12 +257,12 @@ class RobotContainer:
         #     InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
         # )
 
-        self.driverController.povLeft().onTrue(
-            InstantCommand(lambda: self.shooter.setHoodServoGoal(-0.1), self.shooter)
+        self.driverController.povLeft().whileTrue(
+            SwerveToPoint(x=6.07, y=7.41, speed=1.0, headingDegrees=0, drivetrain=self.robotDrive, flipIfRed=True)
         )
 
-        self.driverController.povRight().onTrue(
-            InstantCommand(lambda: self.shooter.setHoodServoGoal(-0.6), self.shooter)
+        self.driverController.povRight().whileTrue(
+            SwerveToPoint(x=6.07, y=0.636, speed=1.0, headingDegrees=0, drivetrain=self.robotDrive, flipIfRed=True)
         )
 
 

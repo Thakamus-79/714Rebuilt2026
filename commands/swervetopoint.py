@@ -8,16 +8,20 @@ from __future__ import annotations
 import commands2
 import math
 
+from constants import AutoConstants
 from subsystems.drivesubsystem import DriveSubsystem
 from commands.aimtodirection import AimToDirectionConstants
 from commands.gotopoint import GoToPointConstants
 
 from wpimath.geometry import Rotation2d, Translation2d, Pose2d
-from wpilib import SmartDashboard
+from wpilib import SmartDashboard, DriverStation
 
 
 class SwerveToPoint(commands2.Command):
-    def __init__(self, x, y, headingDegrees, drivetrain: DriveSubsystem, speed=1.0, slowDownAtFinish=True, rateLimit=False) -> None:
+    def __init__(
+        self, x, y, headingDegrees, drivetrain: DriveSubsystem,
+        speed=1.0, slowDownAtFinish=True, rateLimit=False, flipIfRed=False, flipIfBlue=False,
+    ) -> None:
         super().__init__()
         self.targetPose = None
         self.targetPoint = Translation2d(x, y)
@@ -27,6 +31,9 @@ class SwerveToPoint(commands2.Command):
             self.targetHeading = Rotation2d.fromDegrees(headingDegrees)
         else:
             self.targetHeading = None
+
+        self.flipIfRed = flipIfRed
+        self.flipIfBlue = flipIfBlue
 
         self.speed = speed
         self.stop = slowDownAtFinish
@@ -42,8 +49,23 @@ class SwerveToPoint(commands2.Command):
         initialPose = self.drivetrain.getPose()
         self.initialPosition = initialPose.translation()
 
-        targetHeading = initialPose.rotation() if self.targetHeading is None else self.targetHeading
-        self.targetPose = Pose2d(self.targetPoint, targetHeading)
+        flip = False
+        if self.flipIfRed and DriverStation.getAlliance() == DriverStation.Alliance.kRed:
+            flip = True
+        if self.flipIfBlue and DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
+            flip = True
+
+        targetHeading = initialPose.rotation()
+        if flip:
+            f = AutoConstants.kFieldTags
+            if self.targetHeading is not None:
+                targetHeading = self.targetHeading + Rotation2d.fromDegrees(180)
+            targetPoint = Translation2d(f.getFieldLength() - self.targetPoint.x, f.getFieldWidth() - self.targetPoint.y)
+            self.targetPose = Pose2d(targetPoint, targetHeading)
+        else:
+            if self.targetHeading is not None:
+                targetHeading = self.targetHeading
+            self.targetPose = Pose2d(self.targetPoint, targetHeading)
 
         self.initialDistance = self.initialPosition.distance(self.targetPose.translation())
         self.overshot = False
