@@ -19,8 +19,8 @@ from subsystems.drivesubsystem import DriveSubsystem
 class Constants:
     # other settings
     findingZeroSpeed = -0.11
-    stallCurrentLimit = 40 # amps (must be an integer for Rev)
-    findingZeroCurrentLimit = stallCurrentLimit * 0.7
+    stallCurrentLimit = 60 # amps (must be an integer for Rev)
+    findingZeroCurrentLimit = 30
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
     calibrating = False
@@ -38,29 +38,35 @@ class Constants:
     # (set findingZeroCurrentLimit to half of that value, set calibrating=False and your hood is ready)
 
     # which range of motion we want from this hood?
-    minPosition = -10.0  # motor revolutions
-    maxPosition = 10.0  # motor revolutions
+    minPosition = 0.5  # motor revolutions
+    maxPosition = 18.5  # motor revolutions
+    initialPositionGoal = minPosition  # 0.5 * (maxPosition + minPosition)
     positionTolerance = 0.16  # motor revolutions
-    cancoderToPosition = -7.6328 / 2.5495
 
-    # calibrated angles:
-    maxPositionDegrees = +60.0  # how many degrees is the shooter's heading when turret is @ minPosition?
-    minPositionDegrees = 360 - 60.0  # how many degrees is the shooter's heading when turret is @ maxPosition
+    # calibrated angles: reference position "A" fixed at 270 degrees, reference position "B" at 90 degrees
+    refPositionA = 8.8405
+    refPositionADegrees = 180
+    refPositionB = 1.38
+    refPositionBDegrees = 270
+
+    # the math for converting degrees to motor positions
+    kDegreesPerRotation = (refPositionBDegrees - refPositionADegrees) / (refPositionB - refPositionA)
+    kRotationsPerDegree = 1.0 / kDegreesPerRotation
+    sign = +1 if kRotationsPerDegree > 0 else -1
+
 
     # PID configuration (after you are done with calibrating=True)
-    kP = 0.2  # at first make it very small like this, then start tuning by increasing from there
-    kD = 0.0  # at first start from zero, and when you know your kP you can start increasing kD from some small value >0
-    kMaxOutput = 1.0
+    kMaxOutput = 0.15  # feel free to increase if you want to move faster
+    kP = 0.4
+    kD = 0.0
 
-    kDegreesPerRotation = (maxPositionDegrees - minPositionDegrees) / (maxPosition - minPosition)
-    kRotationsPerDegree = (maxPosition - minPosition) / (maxPositionDegrees - minPositionDegrees)
-    initialPositionGoal = 0.5 * (maxPosition + minPosition)
-    sign = +1 if maxPositionDegrees > minPositionDegrees else -1
+    # cancoder forgets its position for us, we don't trust cancoder, but this is what the setting is
+    cancoderToPosition = -3.0  # because there is a 3:1 gearbox
 
 
-assert Constants.minPositionDegrees != Constants.maxPositionDegrees
-assert abs(Constants.minPositionDegrees - Constants.maxPositionDegrees) < 360, "turret range of motion cannot be 360 or more degrees"
 assert Constants.minPosition < Constants.maxPosition
+assert Constants.refPositionB != Constants.refPositionA
+assert Constants.refPositionBDegrees != Constants.refPositionADegrees
 
 
 class Turret(Subsystem):
@@ -254,7 +260,8 @@ class Turret(Subsystem):
         SmartDashboard.putNumber("Turret/current", self.motor.getOutputCurrent())
         SmartDashboard.putNumber("Turret/goal", self.getPositionGoal())
         SmartDashboard.putNumber("Turret/pos", self.getPosition())
-        SmartDashboard.putNumber("Turret/cancoder", self.cancoder.get_position().value)
+        if self.cancoder is not None:
+            SmartDashboard.putNumber("Turret/cancoder", self.cancoder.get_position().value)
         SmartDashboard.putNumber("Turret/degreesGoal", goalDegrees)
         SmartDashboard.putNumber("Turret/degreesPos", positionDegrees)
 
@@ -284,7 +291,8 @@ def _getLeadMotorConfig(
     config.closedLoop.pid(Constants.kP, 0.0, Constants.kD)
     config.closedLoop.velocityFF(0.0)
     config.closedLoop.outputRange(-Constants.kMaxOutput, +Constants.kMaxOutput)
-    config.smartCurrentLimit(Constants.stallCurrentLimit)
+    if Constants.stallCurrentLimit is not None:
+        config.smartCurrentLimit(Constants.stallCurrentLimit)
     config.inverted(inverted)
     return config
 
@@ -302,13 +310,20 @@ def _drawTurret(origin: Translation2d, direction: Rotation2d) -> Tuple[List[Pose
 
 
 def toDegrees(rotations):
-    return Constants.minPositionDegrees + (rotations - Constants.minPosition) * Constants.kDegreesPerRotation
+    return Constants.refPositionADegrees + (rotations - Constants.refPositionA) * Constants.kDegreesPerRotation
 
+MIN_POSITION_DEGREES = toDegrees(Constants.minPosition)
+MAX_POSITION_DEGREES = toDegrees(Constants.maxPosition)
 
 def toRotations(degrees):
-    degreesAwayFromMin = (degrees - Constants.minPositionDegrees) * Constants.sign
+    degreesAwayFromMin = (degrees - MIN_POSITION_DEGREES) * Constants.sign
 
     # if we want to turn +380 degrees, it's same thing as +20 => use the modulo (%) to get the +20 out of +380
     degreesAwayFromMin = degreesAwayFromMin % 360  # this also works if you want -10 degrees: (-10) % 360 = 350
 
     return Constants.minPosition + degreesAwayFromMin * Constants.sign * Constants.kRotationsPerDegree
+
+
+assert abs(toDegrees(Constants.minPosition) - toDegrees(Constants.maxPosition)) < 360, (
+    "turret range of motion cannot be 360 or more degrees"
+)
