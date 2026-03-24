@@ -51,7 +51,7 @@ class RobotContainer:
         # tracks the location of goal posts for shooting, recommends firing angles and speeds
         self.turret = Turret(
             leadMotorCANId=12,
-            canCoderCANId=13,
+            canCoderCANId=-1,  # we do not trust cancoder for this, unfortunately (our cancoder forgot its home position)
             drivetrain=self.robotDrive,
             turretLocationOnDrivetrain=Translation2d(x=-0.0, y=0),
             motorClass=SparkFlex,
@@ -88,7 +88,7 @@ class RobotContainer:
             inverted= False
         )
         self.intake_arm = IntakeArm(
-            leadMotorCANId=23, motorClass= SparkFlex
+            leadMotorCANId=2, motorClass=SparkFlex
         )
 
         self.limelightLocalizer = LimelightLocalizer(self.robotDrive)
@@ -113,7 +113,6 @@ class RobotContainer:
         # )
 
         self.pickupCamera = LimelightCamera("limelight-intake")
-
 
 
 
@@ -234,20 +233,37 @@ class RobotContainer:
             ResetXY(x=15.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive)
         )
 
-        # from subsystems.indexer import IndexerConstants
-        #
         # self.driverController.povLeft().onTrue(
-        #     InstantCommand(lambda: self.indexer.setFeederVelocityGoal(IndexerConstants.kTargetFeederVelocity))
+        #     InstantCommand(lambda: self.intake_arm.drive(speed=-0.1), self.intake_arm)
         # ).onFalse(
-        #     InstantCommand(lambda: self.indexer.stop())
+        #     InstantCommand(lambda: self.intake_arm.stopAndReset(), self.intake_arm)
         # )
         #
-        # self.driverController.button(XboxController.Button.kY).onTrue(
-        #     InstantCommand(lambda: self.indexer.setWashingMachineVelocityGoal(IndexerConstants.kWashingMachineVelocity))
+        # self.driverController.povRight().onTrue(
+        #     InstantCommand(lambda: self.intake_arm.drive(speed=0.1), self.intake_arm)
         # ).onFalse(
-        #     InstantCommand(lambda: self.indexer.stop())
+        #     InstantCommand(lambda: self.intake_arm.stopAndReset(), self.intake_arm)
         # )
 
+        # self.driverController.povLeft().onTrue(
+        #     InstantCommand(lambda: self.turret.setAngleGoal(270), self.turret)
+        # ).onFalse(
+        #     InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
+        # )
+        #
+        # self.driverController.povRight().onTrue(
+        #     InstantCommand(lambda: self.turret.setAngleGoal(90), self.turret)
+        # ).onFalse(
+        #     InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
+        # )
+
+        self.driverController.povLeft().onTrue(
+            InstantCommand(lambda: self.shooter.setHoodServoGoal(-0.1), self.shooter)
+        )
+
+        self.driverController.povRight().onTrue(
+            InstantCommand(lambda: self.shooter.setHoodServoGoal(-0.6), self.shooter)
+        )
 
 
     def disablePIDSubsystems(self) -> None:
