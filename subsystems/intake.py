@@ -9,7 +9,7 @@ class IntakeConstants:
 
     maxRPM = 6000
     kFF = 18.5 / 10000
-    kP = 2.0 / 10000
+    kP = 4.0 / 10000
     kD = 0.0 / 10000
     targetRPM = -1500
 

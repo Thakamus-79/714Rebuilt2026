@@ -9,9 +9,9 @@ from wpimath.filter import SlewRateLimiter
 class Constants:
     # other settings
     motorInverted = False
-    findingZeroSpeed = 0.2
-    stallCurrentLimit = 90  # amps (must be an integer for Rev)
-    findingZeroCurrentLimit = 75
+    findingZeroSpeed = -0.15
+    stallCurrentLimit = 80  # amps (must be an integer for Rev)
+    findingZeroCurrentLimit = 40
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
     calibrating = False
@@ -29,10 +29,10 @@ class Constants:
     # (set findingZeroCurrentLimit to half of that value, set calibrating=False and your hood is ready)
 
     # which range of motion we want from this hood?
-    maxPosition = -1.0  # motor revolutions
+    maxPosition = +8.0  # motor revolutions
     minPosition = -48.0  # motor revolutions
-    deployedPosition = -11.0  # motor revolutions
-    partlyUpPosition = -39.0
+    deployedPosition = +6.6  # motor revolutions
+    partlyUpPosition = -19.0
     initialPositionGoal = partlyUpPosition
     positionTolerance = 0.0625  # motor revolutions
 
@@ -159,7 +159,7 @@ class IntakeArm(Subsystem):
             print(f"IntakeArm home found with current={current}")
             self.zeroFound = True
             self.stopAndReset()  # because the zero is found
-            self.relativeEncoder.setPosition(0.0)  # found the zero position
+            self.relativeEncoder.setPosition(Constants.minPosition - 5.0)  # found the zero position
             self.pidController = self.motor.getClosedLoopController()
             self.setPositionGoal(Constants.initialPositionGoal)
             return
