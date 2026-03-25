@@ -119,7 +119,7 @@ class Indexer(Subsystem):
 def _motorConfig(kFF, kP, currentLimit) -> SparkBaseConfig:
     config = SparkBaseConfig()
     config.inverted(False)
-    config.setIdleMode(SparkBaseConfig.IdleMode.kBrake)
+    config.setIdleMode(SparkBaseConfig.IdleMode.kCoast)
     config.limitSwitch.forwardLimitSwitchEnabled(False)
     config.limitSwitch.reverseLimitSwitchEnabled(False)
     config.closedLoop.pid(kP, 0.0, 0.0)
