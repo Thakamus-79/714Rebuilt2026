@@ -102,7 +102,7 @@ class DriveSubsystem(Subsystem):
         )
         self.odometryPose = Pose2d()
         self.odometryHeadingOffset = Rotation2d(0)
-        self.resetOdometry(Pose2d(14.0, 4.05, U_TURN))
+        self.resetOdometry(Pose2d(14.0, 4.05, Rotation2d()))  # initial position on the field
 
         self.field = Field2d()
         SmartDashboard.putData("Field", self.field)
