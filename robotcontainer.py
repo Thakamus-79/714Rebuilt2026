@@ -14,7 +14,7 @@ from wpilib import XboxController, Servo, DriverStation
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
 
 from commands.drive_towards_object import SwerveTowardsObject
-from commands.intake import PickUp
+from commands.intake import PickUp, SuppressIntake, Eject
 from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange
 from commands.aimtodirection import AimToDirection
 from commands.swervetopoint import SwerveToPoint
@@ -153,9 +153,17 @@ class RobotContainer:
         and then passing it to a JoystickButton.
         """
         # example 1: hold the wheels in "swerve X brake" position, when "X" button is pressed
-        brakeCommand = RunCommand(self.robotDrive.setX, self.robotDrive)
-        xButton = self.driverController.button(XboxController.Button.kX)
-        xButton.whileTrue(brakeCommand)  # while "X" button is True (pressed), keep executing the brakeCommand
+        suppress = SuppressIntake(arm=self.intake_arm)
+        aButton = self.driverController.button(XboxController.Button.kA)
+        aButton.whileTrue(suppress)
+
+        pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
+        yButton = self.driverController.button(XboxController.Button.kY)
+        yButton.whileTrue(pickUp)
+
+        eject = Eject(intake=self.intake, arm=self.intake_arm)
+        bButton = self.driverController.button(XboxController.Button.kB)
+        bButton.whileTrue(eject)
 
         # example 2: when "POV-up" button pressed, reset robot field position to "facing North"
         resetFacingNorthCommand = ResetXY(x=1.0, y=4.0, headingDegrees=0, drivetrain=self.robotDrive)
@@ -233,37 +241,14 @@ class RobotContainer:
             ResetXY(x=15.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive)
         )
 
-        # self.driverController.povLeft().onTrue(
-        #     InstantCommand(lambda: self.intake_arm.drive(speed=-0.1), self.intake_arm)
-        # ).onFalse(
-        #     InstantCommand(lambda: self.intake_arm.stopAndReset(), self.intake_arm)
-        # )
-        #
-        # self.driverController.povRight().onTrue(
-        #     InstantCommand(lambda: self.intake_arm.drive(speed=0.1), self.intake_arm)
-        # ).onFalse(
-        #     InstantCommand(lambda: self.intake_arm.stopAndReset(), self.intake_arm)
-        # )
-
-        # self.driverController.povLeft().onTrue(
-        #     InstantCommand(lambda: self.turret.setAngleGoal(270), self.turret)
-        # ).onFalse(
-        #     InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
-        # )
-        #
-        # self.driverController.povRight().onTrue(
-        #     InstantCommand(lambda: self.turret.setAngleGoal(90), self.turret)
-        # ).onFalse(
-        #     InstantCommand(lambda: self.turret.stopAndReset(), self.turret)
-        # )
-
         self.driverController.povLeft().whileTrue(
             SwerveToPoint(x=6.07, y=7.41, speed=1.0, headingDegrees=0, drivetrain=self.robotDrive, flipIfRed=True)
         )
-
         self.driverController.povRight().whileTrue(
             SwerveToPoint(x=6.07, y=0.636, speed=1.0, headingDegrees=0, drivetrain=self.robotDrive, flipIfRed=True)
         )
+
+
 
 
     def disablePIDSubsystems(self) -> None:

@@ -7,8 +7,8 @@ from subsystems.intake_arm import Constants as IntakeArmConstants
 
 
 class PickUpConstants:
-    kPickupRollerSpeed = 2000  # rpm
-    kEjectRollerSpeed = -2000  # rpm
+    kPickupRollerSpeed = -2000  # rpm
+    kEjectRollerSpeed = +2000  # rpm
 
 
 class PickUp(commands2.Command):
@@ -33,7 +33,7 @@ class PickUp(commands2.Command):
     def execute(self) -> None:
         return  # there is nothing to do while the command is running
 
-    def start(self):
+    def initialize(self):
         # bring the arm down to its lowest position
         self.arm.setPositionGoal(IntakeArmConstants.deployedPosition)
         # start the rollers
@@ -69,7 +69,7 @@ class Eject(commands2.Command):
     def execute(self) -> None:
         return  # there is nothing to do while the command is running
 
-    def start(self):
+    def initialize(self):
         # bring the arm down to its lowest position
         self.arm.setPositionGoal(IntakeArmConstants.deployedPosition)
         # start the rollers
@@ -83,13 +83,14 @@ class Eject(commands2.Command):
 
 
 class SuppressIntake(commands2.Command):
+
     """
     Usage example:
 
-    pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
+    suppress = SuppressIntake(arm=self.intake_arm)
     ...
 
-    self.driverController.buttons(XboxController.Button.kA).whileTrue(pickUp)
+    self.driverController.buttons(XboxController.Button.kA).whileTrue(suppress)
     """
     def __init__(self, arm: IntakeArm):
         super().__init__()
@@ -102,9 +103,10 @@ class SuppressIntake(commands2.Command):
     def execute(self) -> None:
         return  # there is nothing to do while the command is running
 
-    def start(self):
+    def initialize(self):
         # bring the arm down to its lowest position
         self.arm.setPositionGoal(IntakeArmConstants.minPosition)
+        print("SuppressIntake")
 
     def end(self, interrupted) -> None:
         pass
