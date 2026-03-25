@@ -265,12 +265,177 @@ class RobotContainer:
     def configureAutos(self):
         self.chosenAuto = wpilib.SendableChooser()
         # you can also set the default option, if needed
+        self.chosenAuto.setDefaultOption("4909 Left",self.createAuto4909Left)
+        self.chosenAuto.setDefaultOption("4909 Right",self.createAuto4909Right)
         self.chosenAuto.setDefaultOption("1678 right", self.createAuto1678Right)
         self.chosenAuto.setDefaultOption("1678 left", self.createAuto1678Left)
         self.chosenAuto.setDefaultOption("Hub to Human", self.createAutoCenterToHuman)
         self.chosenAuto.addOption("Test2", self.getAutonomousTest2Shooting)
         self.chosenAuto.addOption("Depot",self.getAutonmouseDepotintake)
         wpilib.SmartDashboard.putData("Chosen Auto", self.chosenAuto)
+
+    def createAuto4909Left(self):
+        setStartPose = ConditionalCommand(
+            ResetXY(x=12.96, y=0.652, headingDegrees=+180, drivetrain=self.robotDrive),
+            ResetXY(x=3.580, y=7.49, headingDegrees=+0, drivetrain=self.robotDrive),
+            lambda: DriverStation.getAlliance() == DriverStation.Alliance.kRed
+        )
+
+        speed = 0.9
+        driveTrajectory = SimpleTrajectory(
+                drivetrain=self.robotDrive,
+                speed=speed,
+                waypoints=[
+                    (2.714, 7.274, 110),
+                    (4.372,7.490, 0),
+                    (5.625,7.382, -12),
+                    (7.763, 6.508,-60),
+                    # next waypoint
+
+                ],
+                endpoint=(7.557, 4.510, -110),
+                flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+                stopAtEnd=True,  # to keep driving onto next command, set =False
+                swerve=True,
+            )
+
+        driveAndPickUp = driveTrajectory.deadlineFor(
+            PickUp(intake=self.intake, arm=self.intake_arm)
+        )
+        driveInReverse = driveTrajectory.reversed()
+
+        shootWhenReady = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,
+            indexer=self.indexer,
+        ).withTimeout(3.0)
+
+        driveNearHub = SimpleTrajectory(
+                drivetrain=self.robotDrive,
+                speed=speed,
+                waypoints=[
+                    (2.709, 7.274, 110),
+                    (3.866,7.373, 90),
+                    (4.599,7.415, 0),
+                    (5.787,7.274,-30),
+                    (6.402,6.065,-104)
+                    # next waypoint
+
+                ],
+                endpoint=(5.787, 4.445, -110),
+                flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+                stopAtEnd=True,  # to keep driving onto next command, set =False
+                swerve=True,
+            )
+        driveToHubPickup = driveNearHub.deadlineFor(
+            PickUp(intake=self.intake, arm=self.intake_arm)
+        )
+        driveToHubReverse = driveNearHub.reversed()
+        shootAgain = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,
+            indexer=self.indexer,
+        ).withTimeout(3.0)
+
+        return setStartPose.andThen(driveAndPickUp).andThen(
+            driveInReverse
+        ).andThen(
+            shootWhenReady
+        ).andThen(
+            driveToHubPickup
+        ).andThen(
+            driveToHubReverse
+        ).andThen(
+            shootAgain
+        )
+
+    def createAuto4909Right(self):
+        setStartPose = ConditionalCommand(
+            ResetXY(x=12.96, y=7.49, headingDegrees=+180, drivetrain=self.robotDrive),
+            ResetXY(x=3.580, y=0.580, headingDegrees=+0, drivetrain=self.robotDrive),
+            lambda: DriverStation.getAlliance() == DriverStation.Alliance.kRed
+        )
+
+        speed = 0.9
+
+        driveTrajectory = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=speed,
+            waypoints=[
+                (2.817, 0.580, -110),
+                (4.250,0.580, 0),
+                (5.171, 0.580, 0),
+                (6.542, 0.850, 12),
+                (7.439, 1.454, 45)
+
+                # next waypoint
+
+            ],
+            endpoint=(7.665, 3.560, 110),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=True,  # to keep driving onto next command, set =False
+            swerve=True,
+        )
+
+        driveAndPickUp = driveTrajectory.deadlineFor(
+            PickUp(intake=self.intake, arm=self.intake_arm)
+        )
+        driveInReverse = driveTrajectory.reversed()
+
+        shootWhenReady = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,
+            indexer=self.indexer,
+        ).withTimeout(3.0)
+
+        driveNearHub = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=speed,
+            waypoints=[
+                (2.709, 0.580, -110),
+                (3.573,0.590, -90),
+                (4.653, 0.590, -90),
+                (6.467,0.839,12),
+                (6.737,1.843, 60)
+
+
+                # next waypoint
+
+            ],
+            endpoint=(5.787, 3.440, 100),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=True,  # to keep driving onto next command, set =False
+            swerve=True,
+        )
+        driveToHubPickup = driveNearHub.deadlineFor(
+            PickUp(intake=self.intake, arm=self.intake_arm)
+        )
+        driveToHubReverse = driveNearHub.reversed()
+        shootAgain = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,
+            indexer=self.indexer,
+        ).withTimeout(3.0)
+
+        return setStartPose.andThen(driveAndPickUp).andThen(
+            driveInReverse
+        ).andThen(
+            shootWhenReady
+        ).andThen(
+            driveToHubPickup
+        ).andThen(
+            driveToHubReverse
+        ).andThen(
+            shootAgain
+        )
 
 
     def createAuto1678Right(self):
