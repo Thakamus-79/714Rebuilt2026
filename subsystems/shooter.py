@@ -137,12 +137,12 @@ def _getLeadMotorConfig() -> SparkBaseConfig:
     config.closedLoop.pid(ShooterConstants.kP, 0.0, ShooterConstants.kD)
     config.closedLoop.velocityFF(ShooterConstants.kFF)
     config.closedLoop.outputRange(-1, +1)
-    config.smartCurrentLimit(ShooterConstants.stallCurrentLimit)
+    #config.smartCurrentLimit(ShooterConstants.stallCurrentLimit)
     return config
 
 def _getFollowMotorConfig():
     followConfig = SparkBaseConfig()
     followConfig.follow(ShooterConstants.kShooterMotorA_CANID, True)  # True = inverted when following
     followConfig.setIdleMode(SparkBaseConfig.IdleMode.kCoast)
-    followConfig.smartCurrentLimit(ShooterConstants.stallCurrentLimit)
+    #followConfig.smartCurrentLimit(ShooterConstants.stallCurrentLimit)
     return followConfig

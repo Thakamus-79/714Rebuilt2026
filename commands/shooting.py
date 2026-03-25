@@ -14,7 +14,7 @@ from subsystems.turret import Turret
 
 
 class Constants:
-    RPM_TOLERANCE_FACTOR = 0.15  # plus minus 10%
+    RPM_TOLERANCE_FACTOR = 0.12  # plus minus 10%
     TARGET_RADIUS_METERS = 0.34  # in reality the target is 0.52m wide, but let's be conservative
     RANGE_TOLERANCE_METERS = 0.1
 
