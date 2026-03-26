@@ -54,7 +54,7 @@ class RobotContainer:
             leadMotorCANId=12,
             canCoderCANId=-1,  # we do not trust cancoder for this, unfortunately (our cancoder forgot its home position)
             drivetrain=self.robotDrive,
-            turretLocationOnDrivetrain=Translation2d(x=-0.0, y=0),
+            turretLocationOnDrivetrain=Translation2d(x=-4.0*0.0254, y=-4.5*0.0254),
             motorClass=SparkFlex,
             display=True,
         )
@@ -69,14 +69,6 @@ class RobotContainer:
             fuelStashesIfRed=[Translation2d(x=14.8, y=0.8), Translation2d(x=14.8, y=7.2)],
             minimumRangeMeters=0.0,
             maximumRangeMeters=99.0,
-        )
-        self.firingTableRighWall = FiringTable(
-            self.robotDrive,
-            shooterLocationOnDrivetrain=self.turret.turretLocationOnDrivetrain,
-            goalIfRed=Translation2d(x=15.0, y=6.0),
-            goalIfBlue=Translation2d(x=2, y=2),
-            minimumRangeMeters=2.0,
-            maximumRangeMeters=3.0,
         )
 
         self.indexer = Indexer()

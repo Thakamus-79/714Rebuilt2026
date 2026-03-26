@@ -14,15 +14,22 @@ from constants import LookupTable
 
 # TODO : calibrate this lookup table on a real robot, and add more points
 RECOMMENDED_SHOOTER_RPM_BY_DISTANCE = LookupTable({
-    1.97 : 2500, # if distance is 1m, spin at 2500 rpm
+    1.52 : 2375,
+    2.4:2750,
+    3.9 : 3000,  # ????
+    6.82 : 3750,
+
 
    # if distance is 12m, spin at 6000 rpm
 })
 
 # TODO : calibrate this lookup table on a real robot, and add more points
 RECOMMENDED_SHOOTER_HOOD_POSITION_BY_DISTANCE = LookupTable({
-    1.97 : -0.1,  # if distance is 1m, hood position -0.1 (firing very vertically)
-    5.0 : -0.8,  # if distance is 12m, hood position -0.8 (firing very horizontally)
+    1.52: -0.1,
+    2.4: -0.2,
+    3.9: -0.5,
+    6.82: -0.8 # imagination
+      # if distance is 12m, hood position -0.8 (firing very horizontally)
 })
 
 
@@ -62,7 +69,7 @@ class FiringTable(Subsystem):
         if FiringTable.rpm is None:
             FiringTable.rpm = SendableChooser()
             FiringTable.rpm.setDefaultOption("lookup", None)
-            for rpm in range(1000, 6000, 250):
+            for rpm in range(1000, 6000, 125):
                 FiringTable.rpm.addOption(str(rpm), rpm)
             SmartDashboard.putData("FiringTable/rpmChosen", FiringTable.rpm)
 
@@ -144,6 +151,8 @@ class FiringTable(Subsystem):
                 self.goal = self.findNearestStash(pose, self.fuelStashesIfBlue) or self.goalIfBlue
         self.shooterLocation = pose.translation() + self.shooterLocationOnDrivetrain.rotateBy(pose.rotation())
         self.vectorToGoal = self.goal - self.shooterLocation
+        distanceMeters = self.distance()
+        SmartDashboard.putNumber("FiringTable/distance", distanceMeters)
 
 
     def resetSmartDashboard(self):
