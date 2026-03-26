@@ -347,7 +347,7 @@ class DriveSubsystem(Subsystem):
     def notPointingTo(self, point: Translation2d, angleToleranceDegrees: float) -> str:
         if point is None:
             return "unclear where the drivetrain should point"
-        heading = self.odometryPose.rotation()
+        heading = self.odometryPose.rotation() + U_TURN   # shooter is in the back
         direction = point - self.odometryPose.translation()
         if direction.squaredNorm() > 0:
             if (heading - direction.angle()).cos() < Rotation2d.fromDegrees(angleToleranceDegrees).cos():
