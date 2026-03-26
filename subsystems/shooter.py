@@ -11,7 +11,7 @@ class ShooterConstants:
     kShooterMotorB_CANID = 40
 
     maxRPM = 5700
-    kFF = 1.68 / 10000  # 18.5 / 10000
+    kFF = 1.68 / 10000  # 18.5 / 10000 (for old Vortexes, go figure)
     kP = 18.0 / 10000
     kD = 0.0 / 10000
 
