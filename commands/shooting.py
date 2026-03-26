@@ -8,7 +8,7 @@ from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 from commands.gotopoint import GoToPointConstants
 from subsystems.firing_table import FiringTable
 from subsystems.drivesubsystem import DriveSubsystem
-from subsystems.indexer import Indexer
+from subsystems.indexer import Indexer, IndexerConstants
 from subsystems.shooter import Shooter
 from subsystems.turret import Turret
 
@@ -18,9 +18,6 @@ class Constants:
     TARGET_RADIUS_METERS = 0.34  # in reality the target is 0.52m wide, but let's be conservative
     RANGE_TOLERANCE_METERS = 0.1
 
-
-class KeepHoodDown(commands2.Command):
-    pass
 
 class GetInRange(commands2.Command):
     """
@@ -296,3 +293,36 @@ def _drawArrow(start: Translation2d, directionVector: Translation2d, nPoints=11,
         result.append(Pose2d(end + ray3, zero))
         result.append(Pose2d(end, zero))
     return result
+
+
+class KeepHoodDown(commands2.Command):
+    def __init__(self, shooter: Shooter):
+        super().__init__()
+        self.shooter = shooter
+        self.addRequirements(shooter)
+
+    def initialize(self):
+        self.shooter.stop()
+        self.shooter.setHoodServoGoal(0)
+
+    def isFinished(self) -> bool:
+        return False
+
+
+class KeepFeederClear(commands2.Command):
+    """
+    Clears jams in the feeder by slowly rotating it backwards
+    """
+    def __init__(self, indexer: Indexer):
+        super().__init__()
+        self.indexer = indexer
+        self.addRequirements(indexer)
+
+    def initialize(self):
+        self.indexer.setFeederVelocityGoal(-0.05 * IndexerConstants.kTargetFeederVelocity)
+
+    def end(self, interrupted: bool):
+        self.indexer.stop()
+
+    def isFinished(self) -> bool:
+        return False

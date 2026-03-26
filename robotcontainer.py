@@ -15,7 +15,7 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, R
 
 from commands.drive_towards_object import SwerveTowardsObject
 from commands.intake import PickUp, SuppressIntake, Eject
-from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange
+from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange, KeepHoodDown, KeepFeederClear
 from commands.aimtodirection import AimToDirection
 from commands.swervetopoint import SwerveToPoint
 from commands.trajectory import SwerveTrajectory, SimpleTrajectory
@@ -35,6 +35,7 @@ from subsystems.intake import Intake
 from subsystems.hood import Hood
 from subsystems.turret import Turret
 from subsystems.intake_arm import IntakeArm
+
 
 class RobotContainer:
     """
@@ -77,13 +78,18 @@ class RobotContainer:
             minimumRangeMeters=2.0,
             maximumRangeMeters=3.0,
         )
+
+        self.indexer = Indexer()
+        self.indexer.setDefaultCommand(KeepFeederClear(self.indexer))
+
         #self.hoodServo = Servo(channel=0)
         self.hoodServo = Hood(leadMotorCANId=42, motorClass=TalonFX)
-        self.indexer = Indexer()
         self.shooter = Shooter(
             inverted= False,
             hoodServos = [self.hoodServo],
         )
+        self.shooter.setDefaultCommand(KeepHoodDown(self.shooter))  # shooter keeps hood down when nothing else to do
+
         self.intake = Intake(
             inverted= False
         )
