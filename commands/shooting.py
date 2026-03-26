@@ -198,7 +198,7 @@ class GetReadyToShoot(commands2.Command):
 
     def setNotReady(self, notReady):
         if notReady != self.notReady:
-            SmartDashboard.putString("GetReadyToShoot", notReady)
+            SmartDashboard.putString("WhyNotShooting", notReady)
             self.notReady = notReady
 
     def turretNotReady(self):
