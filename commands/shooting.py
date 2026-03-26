@@ -319,7 +319,7 @@ class KeepFeederClear(commands2.Command):
         self.addRequirements(indexer)
 
     def initialize(self):
-        self.indexer.setFeederVelocityGoal(-0.05 * IndexerConstants.kTargetFeederVelocity)
+        self.indexer.setFeederVelocityGoal(-0.075 * IndexerConstants.kTargetFeederVelocity)
 
     def end(self, interrupted: bool):
         self.indexer.stop()

@@ -80,7 +80,7 @@ class RobotContainer:
         )
 
         self.indexer = Indexer()
-        self.indexer.setDefaultCommand(KeepFeederClear(self.indexer))
+        self.indexer.setDefaultCommand(KeepFeederClear(self.indexer).withTimeout(10))
 
         #self.hoodServo = Servo(channel=0)
         self.hoodServo = Hood(leadMotorCANId=42, motorClass=TalonFX)
@@ -100,23 +100,22 @@ class RobotContainer:
         self.limelightLocalizer = LimelightLocalizer(self.robotDrive)
 
         # self.centerCamera = LimelightCamera("limelight-center")
-        self.limelightthreea = LimelightCamera("limelight-three", isUsb0=True)
-        self.limelightaiming = LimelightCamera("limelight-aiming", isUsb0=True)
+        self.limelight_shooter = LimelightCamera("limelight-shooter", isUsb0=True)
+        self.limelight_side = LimelightCamera("limelight-side", isUsb0=True)
 
         self.limelightLocalizer.addCamera(
-            self.limelightaiming,
-            cameraPoseOnRobot=Translation3d(x=-0.24765, y=0.0, z=0.235),
+            self.limelight_shooter,
+            cameraPoseOnRobot=Translation3d(x=-9.75 * 0.0254, y=9.5 * 0.0254, z=16.5 * 0.0254),
             cameraHeadingOnRobot=Rotation2d.fromDegrees(180),
             cameraPitchAngleDegrees=24
         )
 
-
-        # self.limelightLocalizer.addCamera(
-        #     self.limelightthreea,
-        #     cameraPoseOnRobot=Translation3d(x=-0.1, y=0., z=0.2),
-        #     cameraHeadingOnRobot=Rotation2d.fromDegrees(180),
-        #     cameraPitchAngleDegrees=0
-        # )
+        self.limelightLocalizer.addCamera(
+            self.limelight_side,
+            cameraPoseOnRobot=Translation3d(x=-6.5 * 0.0254, y=13.5 * 0.0254, z=16.5 * 0.0254),
+            cameraHeadingOnRobot=Rotation2d.fromDegrees(90),
+            cameraPitchAngleDegrees=0
+        )
 
         self.pickupCamera = LimelightCamera("limelight-intake")
 
@@ -243,10 +242,6 @@ class RobotContainer:
         )
 
         # temporary hack for shooter practice: POV Up button puts the robot facing the red hub with its shooter
-        self.driverController.povUp().onTrue(
-            ResetXY(x=15.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive)
-        )
-
         self.driverController.povLeft().whileTrue(
             SwerveToPoint(x=6.07, y=7.41, speed=1.0, headingDegrees=0, drivetrain=self.robotDrive, flipIfRed=True)
         )
