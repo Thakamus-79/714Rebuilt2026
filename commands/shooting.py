@@ -145,6 +145,7 @@ class GetReadyToShoot(commands2.Command):
         if turret is not None:
             self.addRequirements(turret)
 
+        self.recommendedTurretDirection = None
         self.drivetrainTarget = None
         self.notReady = "?"
 
@@ -162,9 +163,9 @@ class GetReadyToShoot(commands2.Command):
 
         # aim the turret if we have it
         if self.turret is not None:
-            direction = self.firingTable.recommendedTurretDirection()
-            if direction is not None:
-                self.turret.setAngleGoal(direction.degrees())
+            self.recommendedTurretDirection = self.firingTable.recommendedTurretDirection()
+            if self.recommendedTurretDirection is not None:
+                self.turret.setAngleGoal(self.recommendedTurretDirection.degrees())
 
         # if we are not aiming with a turret, we can aim with drivetrain
         elif self.drivetrain is not None:
@@ -173,7 +174,7 @@ class GetReadyToShoot(commands2.Command):
                 self.drivetrainTarget = goalPoint
 
         # check if we are ready to fire or not
-        notYet = self.turretNotReady() or self.drivetrainNotReady(distance) \
+        notYet = self.turretNotReady(distance) or self.drivetrainNotReady(distance) \
                  or self.shooter.notReady() or self.distanceNotGood(distance)
         self.setNotReady(notYet)
 
@@ -201,13 +202,21 @@ class GetReadyToShoot(commands2.Command):
             SmartDashboard.putString("WhyNotShooting", notReady)
             self.notReady = notReady
 
-    def turretNotReady(self):
-        if self.turret is None:
-            return ""
-        return self.turret.notReady()
+    def turretNotReady(self, distanceMeters):
+        if self.turret is not None and distanceMeters > 0:
+            problems = self.turret.notReady()
+            if problems:
+                return problems
+            angularToleranceRadians = Constants.TARGET_RADIUS_METERS / distanceMeters
+            angularToleranceDegrees = angularToleranceRadians * 57.2958
+            distanceFromTargetDegrees = self.turret.distanceFromTargetDegrees()
+            if abs(distanceFromTargetDegrees) > angularToleranceDegrees:
+                return "turret not pointing to target yet"
+        # otherwise no problem
+        return ""
 
     def drivetrainNotReady(self, distanceMeters):
-        if self.drivetrain is not None:
+        if self.drivetrain is None:
             # direction not right?
             angularToleranceRadians = Constants.TARGET_RADIUS_METERS / distanceMeters
             angularToleranceDegrees = angularToleranceRadians * 57.2958

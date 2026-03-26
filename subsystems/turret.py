@@ -151,10 +151,12 @@ class Turret(Subsystem):
             return "turret zero not found"
         elif self.invalidGoal:
             return self.invalidGoal
-        elif abs(self.positionGoal - self.getPosition()) > Constants.positionTolerance:
-            return "turret not at target angle" # + f": {self.positionGoal} vs {self.getPosition()} (tol={Constants.positionTolerance})"
         else:
             return ""
+
+
+    def distanceFromTargetDegrees(self):
+        return (self.positionGoal - self.getPosition()) * Constants.kDegreesPerRotation
 
 
     def setAngleGoal(self, goalDegrees: float):
