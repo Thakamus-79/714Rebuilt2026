@@ -65,8 +65,8 @@ class RobotContainer:
             goalIfBlue=Translation2d(x=4.59, y=4.025),
             goalIfRed=Translation2d(x=11.88, y=4.025),
             # where we should shoot, when we are passing from midfield?
-            fuelStashesIfBlue=[Translation2d(x=1.6, y=0.8), Translation2d(x=1.6, y=7.2)],
-            fuelStashesIfRed=[Translation2d(x=14.8, y=0.8), Translation2d(x=14.8, y=7.2)],
+            fuelStashesIfBlue=[Translation2d(x=1.6, y=1.6), Translation2d(x=1.6, y=6.4)],
+            fuelStashesIfRed=[Translation2d(x=14.8, y=1.6), Translation2d(x=14.8, y=6.4)],
             minimumRangeMeters=0.0,
             maximumRangeMeters=99.0,
         )
@@ -516,9 +516,9 @@ class RobotContainer:
 
     def createAutoCenterToHuman(self):
         setStartPose = ConditionalCommand(
-            ResetXY(x=3.527, y=4.025, headingDegrees=+180, drivetrain=self.robotDrive),
+            ResetXY(x=3.527, y=4.025, headingDegrees=+90, drivetrain=self.robotDrive),
             ResetXY(x=AutoConstants.kFieldTags.getFieldLength() - 3.527,
-                    y=AutoConstants.kFieldTags.getFieldWidth() - 4.025, headingDegrees=0, drivetrain=self.robotDrive),
+                    y=AutoConstants.kFieldTags.getFieldWidth() - 4.025, headingDegrees=270, drivetrain=self.robotDrive),
             lambda: DriverStation.getAlliance() == DriverStation.Alliance.kBlue
         )
 
@@ -546,7 +546,7 @@ class RobotContainer:
             swerve=True,
         ).andThen(SwerveTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.6,
+            speed=0.5,
             waypoints=[
                 # next waypoint
             ],
@@ -554,34 +554,21 @@ class RobotContainer:
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=True,  # to keep driving onto next command, set =False
             swerve=True,
-            )
+            ).deadlineFor(PickUp(intake=self.intake, arm=self.intake_arm))
         )
-        driveToScore = SwerveTrajectory(
-            drivetrain=self.robotDrive,
-            speed=speed,
-            waypoints=[
 
-                (2.111,2.463, 180)
-            ],
-            endpoint=(0.546, 0.652, 180),
-            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
-            stopAtEnd=True,  # to keep driving onto next command, set =False
-            swerve=True,
-            )
         scoreAfterFed = GetReadyAndKeepShooting(
             firingTable=self.firingTable,
             shooter=self.shooter,
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
-        ).withTimeout(seconds=2.0)
+        ).deadlineFor(PickUp(intake=self.intake, arm=self.intake_arm)).withTimeout(seconds=5.0)
 
         commands = setStartPose.andThen(
             shootWhenReady
         ).andThen(
             driveTrajectory
-        ).andThen(
-            driveToScore
         ).andThen(
             scoreAfterFed
         )
