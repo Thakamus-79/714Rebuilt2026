@@ -92,8 +92,8 @@ class RobotContainer:
         self.limelightLocalizer = LimelightLocalizer(self.robotDrive)
 
         # self.centerCamera = LimelightCamera("limelight-center")
-        self.limelight_shooter = LimelightCamera("limelight-shooter", isUsb0=True)
-        self.limelight_side = LimelightCamera("limelight-side", isUsb0=True)
+        self.limelight_shooter = LimelightCamera("limelight-shooter", isUsb0=False)
+        self.limelight_side = LimelightCamera("limelight-side", isUsb0=False)
 
         self.limelightLocalizer.addCamera(
             self.limelight_shooter,
