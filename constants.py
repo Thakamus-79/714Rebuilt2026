@@ -165,6 +165,7 @@ class ModuleConstants:
 
 class OIConstants:
     kDriverControllerPort = 0
+    kOperatorControllerPort = 1
     kDriveDeadband = 0.02
 
 

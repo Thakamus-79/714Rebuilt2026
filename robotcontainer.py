@@ -115,6 +115,7 @@ class RobotContainer:
 
         # The driver's controller (joystick)
         self.driverController = CommandGenericHID(OIConstants.kDriverControllerPort)
+        self.operatorController = CommandGenericHID(OIConstants.kOperatorControllerPort)
 
         # Configure the button bindings and autos
         self.configureButtonBindings()
@@ -186,7 +187,15 @@ class RobotContainer:
         )
         whenRightTriggerPressed.whileTrue(keepPointingTowardsHub)
         # ^^ set up a condition for when to do this: do it when the joystick right trigger is pressed by more than 50%
+        whenOperatorRightTriger = self.operatorController.axisGreaterThan(
+            XboxController.Axis.kRightTrigger, threshold=0.5
+        )
+        whenOperatorRightTriger.whileTrue(PickUp(intakeRollers=self.intake, arm=self.intake_arm))
 
+        whenOperatorLeftTriger = self.operatorController.axisGreaterThan(
+            XboxController.Axis.kLeftTrigger, threshold=0.4
+        )
+        whenOperatorLeftTriger.whileTrue(ShakeIntake(arm=self.intake_arm))
         # create a command for keeping the robot nose pointed 45 degrees (for traversing the hump on a swerve drive)
         keepNoseAt45Degrees = PointTowardsLocation(
             drivetrain=self.robotDrive,
@@ -196,18 +205,6 @@ class RobotContainer:
         self.driverController.button(XboxController.Button.kRightBumper).whileTrue(keepNoseAt45Degrees)
         # ^^ set up a condition for when to do this: do it when the joystick right bumper is pressed
 
-
-        getInRange = GetInRange(
-            goal=self.firingTable,
-            drivetrain=self.robotDrive
-        )
-        getReady = GetReadyToShoot(
-            firingTable=self.firingTable,
-            shooter=self.shooter,
-            turret=self.turret,
-            drivetrain=None
-        )
-
         getReadyAndShoot = GetReadyAndKeepShooting(
             firingTable=self.firingTable,
             shooter=self.shooter,
@@ -215,11 +212,17 @@ class RobotContainer:
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
         )
+        #opperator controls
+        self.operatorController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)
+        self.operatorController.button(XboxController.Button.kB).whileTrue(getReadyAndShoot)
+
+        #driver controls
         self.driverController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)
 
         # intake commands
         self.driverController.povLeft().whileTrue(PickUp(self.intake, arm=self.intake_arm))
         self.driverController.povRight().whileTrue(ShakeIntake(self.intake_arm))
+
 
 
 

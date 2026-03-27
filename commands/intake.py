@@ -1,5 +1,5 @@
 import commands2
-from wpilib import Timer
+from wpilib import Timer, SmartDashboard
 
 from subsystems.intake import Intake
 from subsystems.intake_arm import IntakeArm
@@ -55,6 +55,7 @@ class PickUp(commands2.Command):
         self.arm = arm
         self.addRequirements(intakeRollers)
         self.addRequirements(arm)
+        SmartDashboard.putString("PickUp", "created")
 
     def isFinished(self) -> bool:
         return False  # never finishes on its own (maybe this will change when we install a rangefinder)
@@ -63,12 +64,14 @@ class PickUp(commands2.Command):
         return  # there is nothing to do while the command is running
 
     def initialize(self):
+        SmartDashboard.putString("PickUp", "started")
         # bring the arm down to its lowest position
         self.arm.setPositionGoal(IntakeArmConstants.deployedPosition)
         # start the rollers
         self.intakeRollers.setVelocityGoal(PickUpConstants.kPickupRollerSpeed, 0.0)
 
     def end(self, interrupted) -> None:
+        SmartDashboard.putString("PickUp", "finished")
         self.arm.setPositionGoal(IntakeArmConstants.neutralPosition)
         self.intakeRollers.setVelocityGoal(0, 0.0)
 
@@ -152,13 +155,16 @@ class ShakeIntake(commands2.Command):
         self.start = None
         self.startTime = 0.0
         self.addRequirements(arm)
+        SmartDashboard.putString("ShakeIntake", "created")
 
     def initialize(self):
         # at the start, remember arm's target position before this command started
+        SmartDashboard.putString("ShakeIntake", "started")
         self.start = self.arm.positionGoal
         self.startTime = Timer.getFPGATimestamp()
 
     def end(self, interrupted: bool):
+        SmartDashboard.putString("ShakeIntake", "finished")
         # at the end, return the arm to its original target
         self.arm.setPositionGoal(IntakeArmConstants.safePosition)
 
