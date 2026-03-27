@@ -201,7 +201,7 @@ class Hood(Subsystem):
                 self.revPidController = self.revMotor.getClosedLoopController()
             if self.talonMotor is not None:
                 self.talonMotor.set_position(0.0)
-            self.setPositionGoal(Constants.initialPositionGoal)
+            self.setPositionGoal(self.positionGoal)
             return
 
         # otherwise, continue finding it

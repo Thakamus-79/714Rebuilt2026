@@ -226,7 +226,7 @@ class Turret(Subsystem):
             self.stopAndReset()  # because the zero is found
             self.relativeEncoder.setPosition(0.0)  # found the zero position
             self.pidController = self.motor.getClosedLoopController()
-            self.setPositionGoal(Constants.initialPositionGoal)
+            self.setPositionGoal(self.positionGoal)
             return
         # otherwise, continue finding it
         if RobotState.isEnabled():

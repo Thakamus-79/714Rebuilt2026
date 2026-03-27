@@ -161,7 +161,7 @@ class IntakeArm(Subsystem):
             self.stopAndReset()  # because the zero is found
             self.relativeEncoder.setPosition(Constants.minPosition - 5.0)  # found the zero position
             self.pidController = self.motor.getClosedLoopController()
-            self.setPositionGoal(Constants.initialPositionGoal)
+            self.setPositionGoal(self.positionGoal)
             return
         # otherwise, continue finding it
         if RobotState.isEnabled():
