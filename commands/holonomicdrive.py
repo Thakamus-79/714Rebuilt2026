@@ -7,11 +7,15 @@ class HolonomicDrive(commands2.Command):
     "holonomic" means that it can rotate independently of driving forward or left
     (examples: mecanum drivetrain, ball drivetrain, swerve drivetrain)
     """
-    def __init__(self, drivetrain, forwardSpeed, leftSpeed, rotationSpeed, fieldRelative, deadband=0, **kwargs):
+    def __init__(self, drivetrain, forwardSpeed, leftSpeed, rotationSpeed, fieldRelative, deadband=0.0, speedFactor=1.0, **kwargs):
         """
         Drive the robot at `driveSpeed` and `rotationSpeed` until this command is terminated.
         """
         super().__init__()
+
+        self.speedFactor = speedFactor
+        if not callable(speedFactor):
+            self.speedFactor = lambda: speedFactor
 
         self.forwardSpeed = forwardSpeed
         if not callable(forwardSpeed):
@@ -44,9 +48,10 @@ class HolonomicDrive(commands2.Command):
         return False  # never finishes, you should use it with "withTimeout(...)"
 
     def execute(self):
+        speedFactor = max(0.0, self.speedFactor())
         self.drivetrain.drive(
-            applyDeadband(self.forwardSpeed(), self.deadband),
-            applyDeadband(self.leftSpeed(), self.deadband),
+            applyDeadband(self.forwardSpeed() * speedFactor, self.deadband),
+            applyDeadband(self.leftSpeed() * speedFactor, self.deadband),
             applyDeadband(self.rotationSpeed(), self.deadband),
             fieldRelative=self.fieldRelative(),
             **self.kwargs

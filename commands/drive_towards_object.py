@@ -39,14 +39,16 @@ class SwerveTowardsObject(commands2.Command):
         ```
             from commands.drive_towards_object import SwerveTowardsObject
 
-            # create a command for driving towards one gamepiece, using existing Limelight camera and pipeline 1 inside it
+            # create a command for driving towards one gamepiece, using existing Limelight camera and pipeline 0 inside it
             driveToGamepiece = SwerveTowardsObject(
                 drivetrain=self.robotDrive,
-                speed=lambda: self.driverController.getRawAxis(XboxController.Axis.kLeftTrigger),  # speed controlled by "left trigger" stick of the joystick
+                speed=lambda: self.driverController.getRawAxis(XboxController.Axis.kLeftTrigger),
+                # speed controlled by "left trigger" stick of the joystick
                 maxLateralSpeed=1.0,
-                camera=self.frontPickupCamera,
-                cameraLocationOnRobot=Pose2d(x=+0.4, y=-0.2, rotation=Rotation2d.fromDegrees(30)),  # camera located at front-right and tilted 30 degrees to the left
-                cameraPipeline=1,  # if pipeline 1 in that camera is setup to do gamepiece detection
+                camera=self.pickupCamera,
+                cameraLocationOnRobot=Pose2d(x=+0.4, y=-0.2, rotation=Rotation2d.fromDegrees(0)),
+                # camera located at front-right and tilted 30 degrees to the left
+                cameraPipeline=0,  # if pipeline 1 in that camera is setup to do gamepiece detection
                 dontSwitchToSmallerObject=True,
             )
 

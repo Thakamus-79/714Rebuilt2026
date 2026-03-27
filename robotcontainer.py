@@ -129,9 +129,10 @@ class RobotContainer:
         self.robotDrive.setDefaultCommand(
             HolonomicDrive(
                 self.robotDrive,
+                speedFactor=lambda: 0.5 + 0.5 * self.driverController.getRawAxis(XboxController.Axis.kLeftTrigger),
                 forwardSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftY),
                 leftSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftX),
-                rotationSpeed=lambda: -0.7 * self.driverController.getRawAxis(XboxController.Axis.kRightX),
+                rotationSpeed=lambda: -0.35 * self.driverController.getRawAxis(XboxController.Axis.kRightX),
                 fieldRelative=lambda: not fpvButton.getAsBoolean(),
                 deadband=OIConstants.kDriveDeadband,
                 rateLimit=True,
@@ -217,21 +218,6 @@ class RobotContainer:
         self.driverController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)
 
 
-
-        from commands.drive_towards_object import SwerveTowardsObject
-
-        # create a command for driving towards one gamepiece, using existing Limelight camera and pipeline 1 inside it
-        driveToGamepiece = SwerveTowardsObject(
-            drivetrain=self.robotDrive,
-            speed=lambda: self.driverController.getRawAxis(XboxController.Axis.kLeftTrigger),
-            # speed controlled by "left trigger" stick of the joystick
-            maxLateralSpeed=1.0,
-            camera=self.pickupCamera,
-            cameraLocationOnRobot=Pose2d(x=+0.4, y=-0.2, rotation=Rotation2d.fromDegrees(0)),
-            # camera located at front-right and tilted 30 degrees to the left
-            cameraPipeline=0,  # if pipeline 1 in that camera is setup to do gamepiece detection
-            dontSwitchToSmallerObject=True,
-        )
 
         # temporary hack for shooter practice: POV Up button puts the robot facing the red hub with its shooter
         self.driverController.povLeft().whileTrue(

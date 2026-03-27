@@ -11,7 +11,7 @@ class Constants:
     motorInverted = False
     findingZeroSpeed = -0.15
     stallCurrentLimit = 80  # amps (must be an integer for Rev)
-    findingZeroCurrentLimit = 40
+    findingZeroCurrentLimit = 30
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
     calibrating = False
@@ -76,7 +76,7 @@ class IntakeArm(Subsystem):
         self.relativeEncoder = self.motor.getEncoder()  # this encoder can be used instead of absolute, if you know!
 
         # the logic of finding the zero needs to be a little smooth
-        self.findingZeroRateLimiter = SlewRateLimiter(rateLimit=1.0 * Constants.findingZeroSpeed)
+        self.findingZeroRateLimiter = SlewRateLimiter(rateLimit=1.0 * abs(Constants.findingZeroSpeed))
         self.findingZeroRateLimiter.reset(0.0)
 
         # set the initial hood goal to be the minimum
@@ -165,7 +165,8 @@ class IntakeArm(Subsystem):
             return
         # otherwise, continue finding it
         if RobotState.isEnabled():
-            speed = self.findingZeroRateLimiter.calculate(Constants.findingZeroSpeed)
+            limit = abs(Constants.findingZeroSpeed)
+            speed = max(-limit, min(limit, self.findingZeroRateLimiter.calculate(Constants.findingZeroSpeed)))
             SmartDashboard.putNumber("IntakeArm/findingSpeed", speed)
             self.motor.set(speed)
         else:
