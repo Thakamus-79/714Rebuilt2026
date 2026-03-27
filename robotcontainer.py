@@ -106,7 +106,7 @@ class RobotContainer:
             self.limelight_side,
             cameraPoseOnRobot=Translation3d(x=-6.5 * 0.0254, y=13.5 * 0.0254, z=16.5 * 0.0254),
             cameraHeadingOnRobot=Rotation2d.fromDegrees(90),
-            cameraPitchAngleDegrees=0
+            cameraPitchAngleDegrees=15
         )
 
         self.pickupCamera = LimelightCamera("limelight-intake")
