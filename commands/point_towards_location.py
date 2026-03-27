@@ -12,6 +12,7 @@ from wpilib import SmartDashboard, DriverStation
 from wpimath.geometry import Translation2d
 
 from subsystems.drivesubsystem import DriveSubsystem
+from subsystems.firing_table import FiringTable
 
 
 class PointTowardsLocation(commands2.Command):
@@ -40,8 +41,9 @@ class PointTowardsLocation(commands2.Command):
         ```
     """
 
-    def __init__(self, drivetrain: DriveSubsystem, location: Translation2d, locationIfRed: Translation2d):
+    def __init__(self, drivetrain: DriveSubsystem, firingTable: FiringTable | None, location: Translation2d, locationIfRed: Translation2d):
         super().__init__()
+        self.firingTable = firingTable
         self.location, self.locationIfRed = location, locationIfRed
         self.drivetrain = drivetrain  # not calling addRequirement, on purpose
 
@@ -51,13 +53,19 @@ class PointTowardsLocation(commands2.Command):
 
     def initialize(self):
         self.active = False
-        color = DriverStation.getAlliance()
-        if color == DriverStation.Alliance.kRed:
-            self.activeTargetLocation = self.locationIfRed
-            SmartDashboard.putString("command/c" + self.__class__.__name__, "assuming red alliance")
-        else:
-            self.activeTargetLocation = self.location
-            SmartDashboard.putString("command/c" + self.__class__.__name__, "assuming blue or unknown alliance")
+        self.activeTargetLocation = None
+        if self.firingTable is not None:
+            self.activeTargetLocation = self.firingTable.goal
+            SmartDashboard.putString("command/c" + self.__class__.__name__, "goal from firing table")
+
+        if self.activeTargetLocation is None:
+            color = DriverStation.getAlliance()
+            if color == DriverStation.Alliance.kRed:
+                self.activeTargetLocation = self.locationIfRed
+                SmartDashboard.putString("command/c" + self.__class__.__name__, "assuming red alliance")
+            else:
+                self.activeTargetLocation = self.location
+                SmartDashboard.putString("command/c" + self.__class__.__name__, "assuming blue or unknown alliance")
 
 
     def execute(self):
