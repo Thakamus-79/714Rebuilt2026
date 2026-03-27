@@ -29,15 +29,16 @@ class Constants:
     # (set findingZeroCurrentLimit to half of that value, set calibrating=False and your hood is ready)
 
     # which range of motion we want from this hood?
-    maxPosition = +8.0  # motor revolutions
     minPosition = -48.0  # motor revolutions
-    deployedPosition = +6.6  # motor revolutions
-    partlyUpPosition = -19.0
-    initialPositionGoal = partlyUpPosition
-    positionTolerance = 0.0625  # motor revolutions
+    safePosition = -40.0
+    neutralPosition = -19.0
+    deployedPosition = +6.3
+    maxPosition = +8.0
+    initialPositionGoal = neutralPosition
+    positionTolerance = 0.0625
 
     # PID configuration (after you are done with calibrating=True)
-    kMaxOutput = 0.3  # if you want the intake to move faster, increase this
+    kMaxOutput = 0.45  # if you want the intake to move faster, increase this
     kP = 0.2  # at first make it very small like this, then start tuning by increasing from there
     kD = 0.0  # at first start from zero, and when you know your kP you can start increasing kD from some small value >0
 

@@ -14,7 +14,7 @@ from wpilib import XboxController, Servo, DriverStation
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
 
 from commands.drive_towards_object import SwerveTowardsObject
-from commands.intake import PickUp, SuppressIntake, Eject
+from commands.intake import PickUp, SuppressIntake, Eject, StowIntake, ShakeIntake
 from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange, KeepHoodDown, KeepFeederClear
 from commands.aimtodirection import AimToDirection
 from commands.swervetopoint import SwerveToPoint
@@ -155,7 +155,7 @@ class RobotContainer:
         aButton = self.driverController.button(XboxController.Button.kA)
         aButton.whileTrue(suppress)
 
-        pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
+        pickUp = PickUp(intakeRollers=self.intake, arm=self.intake_arm)
         yButton = self.driverController.button(XboxController.Button.kY)
         yButton.whileTrue(pickUp)
 
@@ -217,15 +217,9 @@ class RobotContainer:
         )
         self.driverController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)
 
-
-
-        # temporary hack for shooter practice: POV Up button puts the robot facing the red hub with its shooter
-        self.driverController.povLeft().whileTrue(
-            SwerveToPoint(x=6.07, y=7.41, speed=1.0, headingDegrees=0, drivetrain=self.robotDrive, flipIfRed=True)
-        )
-        self.driverController.povRight().whileTrue(
-            SwerveToPoint(x=6.07, y=0.636, speed=1.0, headingDegrees=0, drivetrain=self.robotDrive, flipIfRed=True)
-        )
+        # intake commands
+        self.driverController.povLeft().whileTrue(PickUp(self.intake, arm=self.intake_arm))
+        self.driverController.povRight().whileTrue(ShakeIntake(self.intake_arm))
 
 
 
@@ -279,7 +273,7 @@ class RobotContainer:
             )
 
         driveAndPickUp = driveTrajectory.deadlineFor(
-            PickUp(intake=self.intake, arm=self.intake_arm)
+            PickUp(intakeRollers=self.intake, arm=self.intake_arm)
         )
         driveInReverse = driveTrajectory.reversed()
 
@@ -309,7 +303,7 @@ class RobotContainer:
                 swerve=True,
             )
         driveToHubPickup = driveNearHub.deadlineFor(
-            PickUp(intake=self.intake, arm=self.intake_arm)
+            PickUp(intakeRollers=self.intake, arm=self.intake_arm)
         )
         driveToHubReverse = driveNearHub.reversed()
         shootAgain = GetReadyAndKeepShooting(
@@ -361,7 +355,7 @@ class RobotContainer:
         )
 
         driveAndPickUp = driveTrajectory.deadlineFor(
-            PickUp(intake=self.intake, arm=self.intake_arm)
+            PickUp(intakeRollers=self.intake, arm=self.intake_arm)
         )
         driveInReverse = driveTrajectory.reversed()
 
@@ -393,7 +387,7 @@ class RobotContainer:
             swerve=True,
         )
         driveToHubPickup = driveNearHub.deadlineFor(
-            PickUp(intake=self.intake, arm=self.intake_arm)
+            PickUp(intakeRollers=self.intake, arm=self.intake_arm)
         )
         driveToHubReverse = driveNearHub.reversed()
         shootAgain = GetReadyAndKeepShooting(
@@ -451,7 +445,7 @@ class RobotContainer:
             indexer=self.indexer,
         ).withTimeout(5.0)
 
-        pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
+        pickUp = PickUp(intakeRollers=self.intake, arm=self.intake_arm)
         driveAndPickUp = driveTrajectory.deadlineFor(pickUp)   # .alongWith
         driveInReverse = driveTrajectory.reversed()
 
@@ -492,7 +486,7 @@ class RobotContainer:
             indexer=self.indexer,
         ).withTimeout(5.0)
 
-        pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
+        pickUp = PickUp(intakeRollers=self.intake, arm=self.intake_arm)
         driveAndPickUp = driveTrajectory.deadlineFor(pickUp)  # .alongWith
         driveInReverse = driveTrajectory.reversed()
 
@@ -540,7 +534,7 @@ class RobotContainer:
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=True,  # to keep driving onto next command, set =False
             swerve=True,
-            ).deadlineFor(PickUp(intake=self.intake, arm=self.intake_arm))
+            ).deadlineFor(PickUp(intakeRollers=self.intake, arm=self.intake_arm))
         )
 
         scoreAfterFed = GetReadyAndKeepShooting(
@@ -549,7 +543,7 @@ class RobotContainer:
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
-        ).deadlineFor(PickUp(intake=self.intake, arm=self.intake_arm)).withTimeout(seconds=5.0)
+        ).deadlineFor(PickUp(intakeRollers=self.intake, arm=self.intake_arm)).withTimeout(seconds=5.0)
 
         commands = setStartPose.andThen(
             shootWhenReady
@@ -671,7 +665,7 @@ class RobotContainer:
             indexer=self.indexer,
         ).withTimeout(seconds=2.0)
 
-        pickUp = PickUp(intake=self.intake, arm=self.intake_arm)
+        pickUp = PickUp(intakeRollers=self.intake, arm=self.intake_arm)
         driveAndPickUp = drivetoball.deadlineFor(pickUp)
         command = setStartPose.andThen(shootWhenReady).andThen(driveAndPickUp).andThen(intakeScoring).andThen(shootafterIntake)
         return command
@@ -716,7 +710,7 @@ class RobotContainer:
             SwerveToPoint( x= 0, y= 0, headingDegrees= 0 , speed= 0.4 , drivetrain=self.robotDrive)
         )
 
-        testArmIntake = PickUp(intake=self.intake, arm=self.intake_arm).withTimeout(2)
+        testArmIntake = PickUp(intakeRollers=self.intake, arm=self.intake_arm).withTimeout(2)
 
         startFeeder = InstantCommand(lambda: self.indexer.setFeederVelocityGoal(2000))
         stopFeeder = InstantCommand(lambda: self.indexer.stop())
