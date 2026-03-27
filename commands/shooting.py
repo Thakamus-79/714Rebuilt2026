@@ -2,7 +2,7 @@ import math
 from typing import List
 
 import commands2
-from wpilib import SmartDashboard
+from wpilib import SmartDashboard, Timer
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 
 from commands.gotopoint import GoToPointConstants
@@ -138,6 +138,7 @@ class GetReadyToShoot(commands2.Command):
         self.shooter = shooter
         self.turret = turret
         self.drivetrain = drivetrain
+        self.readyAfterTime = 0.0
         if self.turret is not None:
             assert self.drivetrain is None, "do not supply drivetrain for aiming if we already have a turret"
         self.addRequirements(shooter)
@@ -175,6 +176,13 @@ class GetReadyToShoot(commands2.Command):
         # check if we are ready to fire or not
         notYet = self.turretNotReady() or self.drivetrainNotReady(distance) \
                  or self.shooter.notReady() or self.distanceNotGood(distance)
+
+        now = Timer.getFPGATimestamp()
+        if not notYet and self.readyAfterTime == 0.0:
+            self.readyAfterTime = now + 0.25  # just wait for another 0.25s
+        if now < self.readyAfterTime:
+            notYet = "almost ready"
+
         self.setNotReady(notYet)
 
     def end(self, interrupted: bool):
@@ -188,6 +196,7 @@ class GetReadyToShoot(commands2.Command):
         self.firingTable.resetSmartDashboard()
 
     def initialize(self):
+        self.readyAfterTime = 0.0
         self.drivetrainTarget = None
         self.setNotReady("started")
 
