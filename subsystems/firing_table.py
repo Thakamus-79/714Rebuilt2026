@@ -64,7 +64,7 @@ class FiringTable(Subsystem):
         self.minimumRangeMeters = minimumRangeMeters
         self.maximumRangeMeters = maximumRangeMeters
 
-        self.goal = None
+        self.goal: Translation2d | None = None
         self.vectorToGoal: Translation2d | None = None
         self.shooterLocation: Translation2d | None = None
 
