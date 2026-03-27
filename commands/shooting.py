@@ -335,3 +335,35 @@ class KeepFeederClear(commands2.Command):
 
     def isFinished(self) -> bool:
         return False
+
+
+class ShootFromFixedPosition(commands2.Command):
+    def __init__(self, turret: Turret, shooter: Shooter, indexer: Indexer, shooterRpm: float = 2700):
+        super().__init__()
+        self.turret = turret
+        self.shooter = shooter
+        self.indexer = indexer
+        self.shooterRpm = shooterRpm
+        self.addRequirements(indexer)
+        self.addRequirements(shooter)
+        self.addRequirements(turret)
+        self.tStart = 0.0
+        SmartDashboard.putString("ShootFromFixedPos", "created")
+
+    def initialize(self):
+        SmartDashboard.putString("ShootFromFixedPos", "started")
+        self.turret.setAngleGoal(270)
+        self.shooter.setHoodServoGoal(0.0)
+        self.shooter.setVelocityGoal(self.shooterRpm, self.shooterRpm * 0.1)
+        self.tStart = Timer.getFPGATimestamp()
+
+    def execute(self):
+        t = Timer.getFPGATimestamp()
+        if t > self.tStart + 2.0:
+            SmartDashboard.putString("ShootFromFixedPos", "shooting")
+            self.indexer.feedGamepieceIntoShooter()
+
+    def end(self, interrupted: bool):
+        SmartDashboard.putString("ShootFromFixedPos", "finished")
+        self.indexer.stop()
+        self.shooter.stop()

@@ -15,7 +15,8 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, R
 
 from commands.drive_towards_object import SwerveTowardsObject
 from commands.intake import PickUp, SuppressIntake, Eject, StowIntake, ShakeIntake
-from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange, KeepHoodDown, KeepFeederClear
+from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange, KeepHoodDown, KeepFeederClear, \
+    ShootFromFixedPosition
 from commands.aimtodirection import AimToDirection
 from commands.swervetopoint import SwerveToPoint
 from commands.trajectory import SwerveTrajectory, SimpleTrajectory
@@ -164,6 +165,10 @@ class RobotContainer:
         bButton = self.driverController.button(XboxController.Button.kB)
         bButton.whileTrue(eject)
 
+        self.operatorController.button(XboxController.Button.kLeftStick).whileTrue(
+            ShootFromFixedPosition(self.turret, self.shooter, self.indexer, shooterRpm=2200)
+        )
+
         # example 2: when "POV-up" button pressed, reset robot field position to "facing North"
         resetFacingNorthCommand = ResetXY(x=1.0, y=4.0, headingDegrees=0, drivetrain=self.robotDrive)
         povUpButton = self.driverController.povUp()
@@ -179,8 +184,9 @@ class RobotContainer:
         # create a command for keeping the robot nose pointed towards the hub
         keepPointingTowardsHub = PointTowardsLocation(
             drivetrain=self.robotDrive,
-            location=Translation2d(x=4.59, y=4.025),
-            locationIfRed=Translation2d(x=11.88, y=4.025),
+            firingTable=self.firingTable,
+            location=None,  # Translation2d(x=4.59, y=4.025),
+            locationIfRed=None,  # Translation2d(x=11.88, y=4.025),
         )
         whenRightTriggerPressed = self.driverController.axisGreaterThan(
             XboxController.Axis.kRightTrigger, threshold=0.5
@@ -199,6 +205,7 @@ class RobotContainer:
         # create a command for keeping the robot nose pointed 45 degrees (for traversing the hump on a swerve drive)
         keepNoseAt45Degrees = PointTowardsLocation(
             drivetrain=self.robotDrive,
+            firingTable=None,
             location=Translation2d(x=999999, y=999999),
             locationIfRed=Translation2d(x=-999999, y=-999999),
         )
