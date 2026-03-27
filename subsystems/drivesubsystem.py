@@ -103,6 +103,7 @@ class DriveSubsystem(Subsystem):
         self.odometryPose = Pose2d()
         self.odometryHeadingOffset = Rotation2d(0)
         self.resetOdometry(Pose2d(14.0, 4.05, Rotation2d()))  # initial position on the field
+        self.x, self.y, self.t, self.vx, self.vy = self.odometryPose.x, self.odometryPose.y, 0.0, 0.0, 0.0
 
         self.field = Field2d()
         SmartDashboard.putData("Field", self.field)
@@ -125,6 +126,16 @@ class DriveSubsystem(Subsystem):
             ),
         )
         self.odometryPose = pose
+
+        # estimate velocities
+        x, y, t = self.odometryPose.x, self.odometryPose.y, Timer.getFPGATimestamp()
+        dt = t - self.t
+        if dt > 0:
+            self.vx, self.vy = (x - self.x) / dt, (y - self.y) / dt
+            SmartDashboard.putNumber("vx", self.vx)
+            SmartDashboard.putNumber("vy", self.vy)
+        self.x, self.y, self.t = x, y, t
+
         SmartDashboard.putNumber("x", pose.x)
         SmartDashboard.putNumber("y", pose.y)
         SmartDashboard.putNumber("heading", pose.rotation().degrees())
