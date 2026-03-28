@@ -153,17 +153,16 @@ class RobotContainer:
         and then passing it to a JoystickButton.
         """
         # example 1: hold the wheels in "swerve X brake" position, when "X" button is pressed
-        suppress = SuppressIntake(arm=self.intake_arm)
+        def rehome():
+            self.intake_arm.forgetZero()
+            self.turret.forgetZero()
+            self.hoodServo.forgetZero()
+
         aButton = self.driverController.button(XboxController.Button.kA)
-        aButton.whileTrue(suppress)
+        aButton.onTrue(InstantCommand(rehome))
 
-        pickUp = PickUp(intakeRollers=self.intake, arm=self.intake_arm)
         yButton = self.driverController.button(XboxController.Button.kY)
-        yButton.whileTrue(pickUp)
-
-        eject = Eject(intake=self.intake, arm=self.intake_arm)
-        bButton = self.driverController.button(XboxController.Button.kB)
-        bButton.whileTrue(eject)
+        yButton.onTrue(StowIntake(self.intake_arm))
 
         self.operatorController.button(XboxController.Button.kLeftStick).whileTrue(
             ShootFromFixedPosition(self.turret, self.shooter, self.indexer, shooterRpm=2200)
