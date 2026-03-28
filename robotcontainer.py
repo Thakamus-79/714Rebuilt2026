@@ -167,7 +167,7 @@ class RobotContainer:
         yButtonO.onTrue(StowIntake(self.intake_arm))
 
         self.operatorController.button(XboxController.Button.kLeftStick).whileTrue(
-            ShootFromFixedPosition(self.turret, self.shooter, self.indexer, shooterRpm=2200)
+            ShootFromFixedPosition(self.turret, self.shooter, self.indexer)
         )
 
         # example 2: when "POV-up" button pressed, reset robot field position to "facing North"
