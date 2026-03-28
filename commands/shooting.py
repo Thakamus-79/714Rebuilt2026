@@ -353,9 +353,9 @@ class ShootFromFixedPosition(commands2.Command):
         SmartDashboard.putString("ShootFromFixedPos", "created")
 
         ShootFromFixedPosition.rpm = SendableChooser()
-        ShootFromFixedPosition.rpm.setDefaultOption("lookup", None)
+        ShootFromFixedPosition.rpm.setDefaultOption("2200", 2200)
         for rpm in range(1900, 2400, 50):
-            ShootFromFixedPosition.rpm.addOption(str(rpm / 2), rpm / 2)
+            ShootFromFixedPosition.rpm.addOption(str(rpm), rpm)
         SmartDashboard.putData("ShootFromFixedPos/rpmChosen", ShootFromFixedPosition.rpm)
 
     def initialize(self):
