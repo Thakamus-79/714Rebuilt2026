@@ -1,5 +1,5 @@
 import commands2
-from wpilib import Timer, SmartDashboard
+from wpilib import Timer, SmartDashboard, SendableChooser
 
 from subsystems.intake import Intake
 from subsystems.intake_arm import IntakeArm
@@ -147,10 +147,10 @@ class ShakeIntake(commands2.Command):
     This command shakes the intake and is likely going to be an energy hog,
     but it will generate vibration that you need to pop the last gamepieces from the hopper.
     """
-    def __init__(self, intake: Intake, arm: IntakeArm, intervalSeconds=1.5):
+    intervalSeconds: SendableChooser | None = None
+
+    def __init__(self, intake: Intake, arm: IntakeArm):
         super().__init__()
-        assert intervalSeconds > 0
-        self.intervalSeconds = intervalSeconds
         self.arm = arm
         self.intake = intake
         self.start = None
@@ -158,6 +158,13 @@ class ShakeIntake(commands2.Command):
         self.addRequirements(arm)
         self.addRequirements(intake)
         SmartDashboard.putString("ShakeIntake", "created")
+
+        ShakeIntake.intervalSeconds = SendableChooser()
+        ShakeIntake.intervalSeconds.setDefaultOption("1.5", 1.5)
+        ShakeIntake.intervalSeconds.addOption("0.75", 0.75)
+        ShakeIntake.intervalSeconds.addOption("0.33", 0.33)
+        ShakeIntake.intervalSeconds.addOption("0.17", 0.17)
+        ShakeIntake.intervalSeconds.addOption("0.1", 0.1)
 
     def initialize(self):
         # at the start, remember arm's target position before this command started
@@ -174,9 +181,9 @@ class ShakeIntake(commands2.Command):
 
     def execute(self) -> None:
         t = Timer.getFPGATimestamp() - self.startTime
-        phase = (t / self.intervalSeconds) % 1.0
+        phase = (t / self.intervalSeconds.getSelected()) % 1.0
         # ^^ this phase oscillates between 0.0 and 0.99999, the arm will go up when phase<0.5 and go down otherwise
         if phase < 0.5:
-            self.arm.setPositionGoal(IntakeArmConstants.deployedPosition)
+            self.arm.setPositionGoal(IntakeArmConstants.neutralPosition)
         else:
             self.arm.setPositionGoal(0.75 * IntakeArmConstants.neutralPosition + 0.25 * IntakeArmConstants.stowedPosition)

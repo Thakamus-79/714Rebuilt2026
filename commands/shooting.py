@@ -2,7 +2,7 @@ import math
 from typing import List
 
 import commands2
-from wpilib import SmartDashboard, Timer
+from wpilib import SmartDashboard, Timer, SendableChooser
 from wpimath.geometry import Translation2d, Rotation2d, Pose2d
 
 from commands.gotopoint import GoToPointConstants
@@ -338,7 +338,9 @@ class KeepFeederClear(commands2.Command):
 
 
 class ShootFromFixedPosition(commands2.Command):
-    def __init__(self, turret: Turret, shooter: Shooter, indexer: Indexer, shooterRpm: float = 2700):
+    rpm: SendableChooser | None = None
+
+    def __init__(self, turret: Turret, shooter: Shooter, indexer: Indexer, shooterRpm: float | None = None):
         super().__init__()
         self.turret = turret
         self.shooter = shooter
@@ -350,18 +352,27 @@ class ShootFromFixedPosition(commands2.Command):
         self.tStart = 0.0
         SmartDashboard.putString("ShootFromFixedPos", "created")
 
+        ShootFromFixedPosition.rpm = SendableChooser()
+        ShootFromFixedPosition.rpm.setDefaultOption("lookup", None)
+        for rpm in range(2 * 1000, 2 * 6000, 125):
+            ShootFromFixedPosition.rpm.addOption(str(rpm / 2), rpm / 2)
+        SmartDashboard.putData("ShootFromFixedPos/rpmChosen", ShootFromFixedPosition.rpm)
+
     def initialize(self):
-        SmartDashboard.putString("ShootFromFixedPos", "started")
-        self.turret.setAngleGoal(270)
+        rpm = self.shooterRpm
+        if rpm is None:
+            rpm = ShootFromFixedPosition.rpm.getSelected()
+        SmartDashboard.putString("ShootFromFixedPos", f"started @ {rpm}")
+        self.turret.setAngleGoal(90)
         self.shooter.setHoodServoGoal(0.0)
-        self.shooter.setVelocityGoal(self.shooterRpm, self.shooterRpm * 0.1)
+        self.shooter.setVelocityGoal(rpm, self.shooterRpm * 0.1)
         self.tStart = Timer.getFPGATimestamp()
 
     def execute(self):
         t = Timer.getFPGATimestamp()
         if t > self.tStart + 2.0:
-            SmartDashboard.putString("ShootFromFixedPos", "shooting")
             self.indexer.feedGamepieceIntoShooter()
+            SmartDashboard.putString("ShootFromFixedPos", f"shooting")
 
     def end(self, interrupted: bool):
         SmartDashboard.putString("ShootFromFixedPos", "finished")
