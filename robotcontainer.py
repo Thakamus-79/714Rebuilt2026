@@ -172,8 +172,8 @@ class RobotContainer:
 
         # example 2: when "POV-up" button pressed, reset robot field position to "intake facing the players"
         resetFacingNorthCommand = ConditionalCommand(
-            ResetXY(x=1.0, y=4.025, headingDegrees=180, drivetrain=self.robotDrive),
-            ResetXY(x=AutoConstants.kFieldTags.getFieldLength() - 1.0, y=4.025, headingDegrees=0, drivetrain=self.robotDrive),
+            ResetXY(x=2.5, y=4.025, headingDegrees=180, drivetrain=self.robotDrive),
+            ResetXY(x=AutoConstants.kFieldTags.getFieldLength() - 2.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive),
             lambda: DriverStation.getAlliance() == DriverStation.Alliance.kBlue)
         povUpButton = self.driverController.povUp()
         povUpButton.whileTrue(resetFacingNorthCommand)
