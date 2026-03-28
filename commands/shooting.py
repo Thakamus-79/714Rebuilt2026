@@ -353,9 +353,9 @@ class ShootFromFixedPosition(commands2.Command):
         SmartDashboard.putString("ShootFromFixedPos", "created")
 
         ShootFromFixedPosition.rpm = SendableChooser()
-        for rpm in range(1900, 2400, 50):
+        for rpm in range(2000, 2500, 50):
             ShootFromFixedPosition.rpm.addOption(str(rpm), rpm)
-        ShootFromFixedPosition.rpm.setDefaultOption("2200", 2200)
+        ShootFromFixedPosition.rpm.setDefaultOption("2350", 2350)
         SmartDashboard.putData("ShootFromFixedPos/rpmChosen", ShootFromFixedPosition.rpm)
 
     def initialize(self):
@@ -363,7 +363,7 @@ class ShootFromFixedPosition(commands2.Command):
         if rpm is None:
             rpm = ShootFromFixedPosition.rpm.getSelected()
         if rpm is None:
-            rpm = 2200
+            rpm = 2350
         SmartDashboard.putString("ShootFromFixedPos", f"started @ {rpm}")
         self.turret.setAngleGoal(90)
         self.shooter.setHoodServoGoal(0.0)
