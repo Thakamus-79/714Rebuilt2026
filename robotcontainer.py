@@ -161,8 +161,10 @@ class RobotContainer:
         aButton = self.driverController.button(XboxController.Button.kA)
         aButton.onTrue(InstantCommand(rehome))
 
-        yButton = self.driverController.button(XboxController.Button.kY)
-        yButton.onTrue(StowIntake(self.intake_arm))
+        yButtonD = self.driverController.button(XboxController.Button.kY)
+        yButtonD.onTrue(StowIntake(self.intake_arm))
+        yButtonO = self.operatorController.button(XboxController.Button.kY)
+        yButtonO.onTrue(StowIntake(self.intake_arm))
 
         self.operatorController.button(XboxController.Button.kLeftStick).whileTrue(
             ShootFromFixedPosition(self.turret, self.shooter, self.indexer, shooterRpm=2200)
