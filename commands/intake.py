@@ -157,24 +157,26 @@ class ShakeIntake(commands2.Command):
         self.startTime = 0.0
         self.addRequirements(arm)
         self.addRequirements(intake)
-        SmartDashboard.putString("ShakeIntake", "created")
+        SmartDashboard.putString("ShakeIntake/state", "created")
 
-        ShakeIntake.intervalSeconds = SendableChooser()
-        ShakeIntake.intervalSeconds.setDefaultOption("1.5", 1.5)
-        ShakeIntake.intervalSeconds.addOption("0.75", 0.75)
-        ShakeIntake.intervalSeconds.addOption("0.33", 0.33)
-        ShakeIntake.intervalSeconds.addOption("0.17", 0.17)
-        ShakeIntake.intervalSeconds.addOption("0.1", 0.1)
+        if ShakeIntake.intervalSeconds is None:
+            ShakeIntake.intervalSeconds = SendableChooser()
+            ShakeIntake.intervalSeconds.setDefaultOption("1.5", 1.5)
+            ShakeIntake.intervalSeconds.addOption("0.75", 0.75)
+            ShakeIntake.intervalSeconds.addOption("0.33", 0.33)
+            ShakeIntake.intervalSeconds.addOption("0.17", 0.17)
+            ShakeIntake.intervalSeconds.addOption("0.1", 0.1)
+            SmartDashboard.putData("ShakeIntake/intervalSeconds", ShakeIntake.intervalSeconds)
 
     def initialize(self):
         # at the start, remember arm's target position before this command started
-        SmartDashboard.putString("ShakeIntake", "started")
+        SmartDashboard.putString("ShakeIntake/state", "started")
         self.start = self.arm.positionGoal
         self.startTime = Timer.getFPGATimestamp()
         self.intake.setVelocityGoal(PickUpConstants.kPickupRollerSpeed, 0.1 * PickUpConstants.kPickupRollerSpeed)
 
     def end(self, interrupted: bool):
-        SmartDashboard.putString("ShakeIntake", "finished")
+        SmartDashboard.putString("ShakeIntake/state", "finished")
         # at the end, return the arm to its original target
         self.arm.setPositionGoal(IntakeArmConstants.neutralPosition)
         self.intake.stop()

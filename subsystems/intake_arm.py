@@ -9,7 +9,7 @@ from wpimath.filter import SlewRateLimiter
 class Constants:
     # other settings
     motorInverted = True  # only for 714
-    findingZeroSpeed = -0.15
+    findingZeroSpeed = +0.15
     stallCurrentLimit = 80  # amps (must be an integer for Rev)
     findingZeroCurrentLimit = 30
 
@@ -160,7 +160,7 @@ class IntakeArm(Subsystem):
             print(f"IntakeArm home found with current={current}")
             self.zeroFound = True
             self.stopAndReset()  # because the zero is found
-            self.relativeEncoder.setPosition(Constants.minPosition - 5.0)  # found the zero position
+            self.relativeEncoder.setPosition(Constants.maxPosition + 5.0)  # found the zero position
             self.pidController = self.motor.getClosedLoopController()
             self.setPositionGoal(self.positionGoal)
             return
