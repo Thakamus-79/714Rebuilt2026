@@ -273,7 +273,7 @@ class RobotContainer:
 
     def createAuto4909Left(self):
         setStartPose = ConditionalCommand(
-            ResetXY(x=12.96, y=0.652, headingDegrees=+180, drivetrain=self.robotDrive),
+            self.resetXYTwice(x=12.96, y=0.652, headingDegrees=+180, flipIfRed=True),
             ResetXY(x=3.580, y=7.49, headingDegrees=+0, drivetrain=self.robotDrive),
             lambda: DriverStation.getAlliance() == DriverStation.Alliance.kRed
         )
@@ -625,17 +625,25 @@ class RobotContainer:
         return command
 
     def createPointNorthLeftAuto(self):
-        return ResetXY(x=3.00, y=8.05 - 0.64, headingDegrees=180, drivetrain=self.robotDrive, flipIfRed=True)
+        return self.resetXYTwice(x=3.00, y=8.05 - 0.64, headingDegrees=180, flipIfRed=True)
 
     def createPointNorthRightAuto(self):
-        return ResetXY(x=3.00, y=0.64, headingDegrees=180, drivetrain=self.robotDrive, flipIfRed=True)
+        return self.resetXYTwice(x=3.00, y=0.64, headingDegrees=180, flipIfRed=True)
 
     def getAutonmouseDepotintake(self):
-        setStartPose = ResetXY(x=3.527, y=4.025, headingDegrees=+270, drivetrain=self.robotDrive, flipIfRed=True)
+        setStartPose = self.resetXYTwice(
+            x=3.527, y=4.025, headingDegrees=+270, flipIfRed=True
+        )
 
         shootFromThere = SwerveToPoint(
             x=3.250, y=4.025, headingDegrees=+270, drivetrain=self.robotDrive, flipIfRed=True, speed=0.5,
-        ).andThen(ShootFromFixedPosition(self.turret, self.shooter, self.indexer).withTimeout(5.0))
+        ).andThen(
+            (
+                ShootFromFixedPosition(self.turret, self.shooter, self.indexer).deadlineFor(
+                    ShakeIntake(self.intake, self.intake_arm)
+                )
+            ).withTimeout(5.0)
+        )
 
         drivetoball = SimpleTrajectory(
             drivetrain=self.robotDrive,

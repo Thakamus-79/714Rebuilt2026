@@ -157,7 +157,7 @@ class ShakeIntake(commands2.Command):
         self.startTime = 0.0
         self.addRequirements(arm)
         self.addRequirements(intake)
-        SmartDashboard.putString("ShakeIntake", "created")
+        SmartDashboard.putString("ShakeIntake/state", "created")
 
         if ShakeIntake.intervalSeconds is None:
             ShakeIntake.intervalSeconds = SendableChooser()
@@ -170,13 +170,13 @@ class ShakeIntake(commands2.Command):
 
     def initialize(self):
         # at the start, remember arm's target position before this command started
-        SmartDashboard.putString("ShakeIntake", "started")
+        SmartDashboard.putString("ShakeIntake/state", "started")
         self.start = self.arm.positionGoal
         self.startTime = Timer.getFPGATimestamp()
         self.intake.setVelocityGoal(PickUpConstants.kPickupRollerSpeed, 0.1 * PickUpConstants.kPickupRollerSpeed)
 
     def end(self, interrupted: bool):
-        SmartDashboard.putString("ShakeIntake", "finished")
+        SmartDashboard.putString("ShakeIntake/state", "finished")
         # at the end, return the arm to its original target
         self.arm.setPositionGoal(IntakeArmConstants.neutralPosition)
         self.intake.stop()
