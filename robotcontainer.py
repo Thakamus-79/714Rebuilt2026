@@ -270,7 +270,7 @@ class RobotContainer:
                 speed=speed,
                 waypoints=[
                     (2.714, 7.274, 110),
-                    (4.372,7.490, 0),
+                    (3.872,7.390, 0),
                     (5.625,7.382, -12),
                     (7.763, 6.508,-60),
                     # next waypoint
@@ -350,7 +350,7 @@ class RobotContainer:
             speed=speed,
             waypoints=[
                 (2.817, 0.580, -110),
-                (4.250,0.580, 0),
+                (3.800,0.580, 0),
                 (5.171, 0.580, 0),
                 (6.542, 0.850, 12),
                 (7.439, 1.454, 45)
@@ -422,11 +422,7 @@ class RobotContainer:
 
 
     def createAuto1678Right(self):
-        setStartPose = ConditionalCommand(
-            ResetXY(x=12.96, y=7.49, headingDegrees=+180, drivetrain=self.robotDrive),
-            ResetXY(x=1.626, y=0.587, headingDegrees=+0, drivetrain=self.robotDrive),
-            lambda: DriverStation.getAlliance() == DriverStation.Alliance.kRed
-        )
+        setStartPose = ResetXY(x=1.626, y=0.587, headingDegrees=+0, drivetrain=self.robotDrive, flipIfRed=True)
 
         speed = .9
 
@@ -439,7 +435,6 @@ class RobotContainer:
                 (5.326, 0.690, 0.0),
                 (6.718, 0.855, 60.0),
                 (7.746, 1.423, 90) # next waypoint
-
             ],
             endpoint=(7.746, 3.498, 110),
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
@@ -453,9 +448,9 @@ class RobotContainer:
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
-        ).withTimeout(5.0)
+        ).withTimeout(10.0)
 
-        pickUp = PickUp(intakeRollers=self.intake, arm=self.intake_arm)
+        pickUp = WaitCommand(1).andThen(PickUp(intakeRollers=self.intake, arm=self.intake_arm))
         driveAndPickUp = driveTrajectory.deadlineFor(pickUp)   # .alongWith
         driveInReverse = driveTrajectory.reversed()
 
@@ -464,11 +459,7 @@ class RobotContainer:
                 .andThen(driveInReverse).andThen(shootWhenReady))
 
     def createAuto1678Left(self):
-        setStartPose = ConditionalCommand(
-            ResetXY(x=12.96, y=0.652, headingDegrees=+180, drivetrain=self.robotDrive),
-            ResetXY(x=3.490, y=7.49, headingDegrees=+0, drivetrain=self.robotDrive),
-            lambda: DriverStation.getAlliance() == DriverStation.Alliance.kRed
-        )
+        setStartPose = ResetXY(x=3.490, y=7.49, headingDegrees=+0, drivetrain=self.robotDrive, flipIfRed=True)
 
         speed = 0.9
 
@@ -494,9 +485,9 @@ class RobotContainer:
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
-        ).withTimeout(5.0)
+        ).withTimeout(10.0)
 
-        pickUp = PickUp(intakeRollers=self.intake, arm=self.intake_arm)
+        pickUp = WaitCommand(1).andThen(PickUp(intakeRollers=self.intake, arm=self.intake_arm))
         driveAndPickUp = driveTrajectory.deadlineFor(pickUp)  # .alongWith
         driveInReverse = driveTrajectory.reversed()
 
