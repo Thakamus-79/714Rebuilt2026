@@ -11,7 +11,7 @@ class Constants:
     motorInverted = True  # only for 714
     findingZeroSpeed = +0.15
     stallCurrentLimit = 80  # amps (must be an integer for Rev)
-    findingZeroCurrentLimit = 30
+    findingZeroCurrentLimit = 50
 
     # calibrating? (at first, set it =True and calibrate all the constants above)
     calibrating = False
