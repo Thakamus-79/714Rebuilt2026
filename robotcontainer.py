@@ -265,6 +265,8 @@ class RobotContainer:
         self.chosenAuto.setDefaultOption("Hub to Human", self.createAutoCenterToHuman)
         self.chosenAuto.addOption("Test2", self.getAutonomousTest2Shooting)
         self.chosenAuto.addOption("Depot",self.getAutonmouseDepotintake)
+        self.chosenAuto.addOption("PointNorthLeft",self.createPointNorthLeftAuto)
+        self.chosenAuto.addOption("PointNorthRight",self.createPointNorthRightAuto)
         wpilib.SmartDashboard.putData("Chosen Auto", self.chosenAuto)
 
     def createAuto4909Left(self):
@@ -620,16 +622,18 @@ class RobotContainer:
         .andThen(centerintake).andThen(finalShootingCMD))
         return command
 
+    def createPointNorthLeftAuto(self):
+        return ResetXY(x=3.00, y=8.05 - 0.64, headingDegrees=180, drivetrain=self.robotDrive, flipIfRed=True)
+
+    def createPointNorthRightAuto(self):
+        return ResetXY(x=3.00, y=0.64, headingDegrees=180, drivetrain=self.robotDrive, flipIfRed=True)
+
     def getAutonmouseDepotintake(self):
         setStartPose = ResetXY(x=3.527, y=4.025, headingDegrees=+270, drivetrain=self.robotDrive, flipIfRed=True)
 
-        shootWhenReady = GetReadyAndKeepShooting(
-            firingTable=self.firingTable,
-            shooter=self.shooter,
-            turret=self.turret,
-            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
-            indexer=self.indexer,
-        ).withTimeout(seconds=4.0)
+        shootFromThere = SwerveToPoint(
+            x=3.250, y=4.025, headingDegrees=+270, drivetrain=self.robotDrive, flipIfRed=True, speed=0.5,
+        ).andThen(ShootFromFixedPosition(self.turret, self.shooter, self.indexer).withTimeout(5.0))
 
         drivetoball = SimpleTrajectory(
             drivetrain=self.robotDrive,
@@ -681,7 +685,7 @@ class RobotContainer:
             indexer=self.indexer,
         )
 
-        command = setStartPose.andThen(shootWhenReady).andThen(drivetoball).andThen(
+        command = setStartPose.andThen(shootFromThere).andThen(drivetoball).andThen(
             intakeScoring.deadlineFor(prepareToShoot)
         ).andThen(shootafterIntake)
         return command

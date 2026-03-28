@@ -7,7 +7,7 @@ from subsystems.intake_arm import Constants as IntakeArmConstants
 
 
 class PickUpConstants:
-faster     kPickupRollerSpeed = -2000  # rpm
+    kPickupRollerSpeed = -2000  # rpm
     kEjectRollerSpeed = +2000  # rpm
 
 
