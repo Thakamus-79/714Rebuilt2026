@@ -201,7 +201,7 @@ class RobotContainer:
         whenOperatorLeftTriger = self.operatorController.axisGreaterThan(
             XboxController.Axis.kLeftTrigger, threshold=0.4
         )
-        whenOperatorLeftTriger.whileTrue(ShakeIntake(arm=self.intake_arm))
+        whenOperatorLeftTriger.whileTrue(ShakeIntake(intake=self.intake, arm=self.intake_arm))
         # create a command for keeping the robot nose pointed 45 degrees (for traversing the hump on a swerve drive)
         keepNoseAt45Degrees = PointTowardsLocation(
             drivetrain=self.robotDrive,
@@ -228,7 +228,7 @@ class RobotContainer:
 
         # intake commands
         self.driverController.povLeft().whileTrue(PickUp(self.intake, arm=self.intake_arm))
-        self.driverController.povRight().whileTrue(ShakeIntake(self.intake_arm))
+        self.driverController.povRight().whileTrue(ShakeIntake(self.intake, self.intake_arm))
 
 
 

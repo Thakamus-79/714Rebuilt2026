@@ -8,7 +8,7 @@ from wpimath.filter import SlewRateLimiter
 
 class Constants:
     # other settings
-    motorInverted = False
+    motorInverted = True  # only for 714
     findingZeroSpeed = -0.15
     stallCurrentLimit = 80  # amps (must be an integer for Rev)
     findingZeroCurrentLimit = 30
@@ -30,10 +30,10 @@ class Constants:
 
     # which range of motion we want from this hood?
     minPosition = -48.0  # motor revolutions
-    safePosition = -40.0
-    neutralPosition = -19.0
-    deployedPosition = +6.3
-    maxPosition = +8.0
+    stowedPosition = -42.0
+    neutralPosition = -10.0
+    deployedPosition = -4.0  # 8630: +6.3
+    maxPosition = -3.0  # 8630: +8.0
     initialPositionGoal = neutralPosition
     positionTolerance = 0.0625
 

@@ -31,7 +31,7 @@ RECOMMENDED_SHOOTER_HOOD_POSITION_BY_DISTANCE = LookupTable({
     3.04: -0.4,
     3.9: -0.5,
     6.82: -0.8,  # imagination
-      # if distance is 12m, hood position -0.8 (firing very horizontally)
+    # if distance is 12m, hood position -0.8 (firing very horizontally)
 })
 
 
@@ -39,6 +39,7 @@ RECOMMENDED_SHOOTER_HOOD_POSITION_BY_DISTANCE = LookupTable({
 class FiringTable(Subsystem):
     rpm: SendableChooser | None = None
     hoodPos: SendableChooser | None = None
+    ballVelocity: SendableChooser | None = None
 
     """
     Tracks how far the goal is, recommends shooter speed (RPM), firing angle and direction
@@ -78,9 +79,16 @@ class FiringTable(Subsystem):
         if FiringTable.hoodPos is None:
             FiringTable.hoodPos = SendableChooser()
             FiringTable.hoodPos.setDefaultOption("lookup", None)
-            for f in [0.01,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]:
+            for f in [0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]:
                 FiringTable.hoodPos.addOption(str(-f), -f)
             SmartDashboard.putData("FiringTable/hoodPosChosen", FiringTable.hoodPos)
+
+        if FiringTable.ballVelocity is None:
+            FiringTable.ballVelocity = SendableChooser()
+            FiringTable.ballVelocity.setDefaultOption("99", 99.0)
+            for f in [1.4, 2.0, 2.8, 4.0, 6.0, 9.8, 13.0, 18.0]:
+                FiringTable.ballVelocity.addOption(str(f), f)
+            SmartDashboard.putData("FiringTable/ballVelocity", FiringTable.ballVelocity)
 
         self.resetSmartDashboard()
 
@@ -151,8 +159,18 @@ class FiringTable(Subsystem):
             self.goal = self.goalIfBlue
             if pose.x > 4.62:
                 self.goal = self.findNearestStash(pose, self.fuelStashesIfBlue) or self.goalIfBlue
+
         self.shooterLocation = pose.translation() + self.shooterLocationOnDrivetrain.rotateBy(pose.rotation())
-        self.vectorToGoal = self.goal - self.shooterLocation
+        timeOfFlight = (self.goal - self.shooterLocation).norm() / self.ballVelocity.getSelected()
+
+        adjustment = Translation2d(-self.drivetrain.vx * timeOfFlight, -self.drivetrain.vy * timeOfFlight)
+        SmartDashboard.putString("FiringTable/adjustment", str((round(adjustment.x, 2), round(adjustment.y, 2))))
+        effectiveGoal = self.goal + adjustment
+        if self.drivetrain.field is not None:
+            self.drivetrain.field.getObject("effectiveGoal").setPose(Pose2d(effectiveGoal, Rotation2d()))
+
+        self.vectorToGoal = effectiveGoal - self.shooterLocation
+
         distanceMeters = self.distance()
         SmartDashboard.putNumber("FiringTable/distance", distanceMeters)
 

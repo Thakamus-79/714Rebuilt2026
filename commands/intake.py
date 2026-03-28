@@ -33,7 +33,7 @@ class StowIntake(commands2.Command):
 
     def initialize(self):
         # bring the arm down to its lowest position
-        self.arm.setPositionGoal(IntakeArmConstants.safePosition)
+        self.arm.setPositionGoal(IntakeArmConstants.stowedPosition)
 
     def end(self, interrupted) -> None:
         # bring the arm down to its lowest position
@@ -135,7 +135,7 @@ class SuppressIntake(commands2.Command):
 
     def initialize(self):
         # bring the arm down to its lowest position
-        self.arm.setPositionGoal(IntakeArmConstants.minPosition)
+        self.arm.setPositionGoal(IntakeArmConstants.stowedPosition)
         print("SuppressIntake")
 
     def end(self, interrupted) -> None:
@@ -147,14 +147,16 @@ class ShakeIntake(commands2.Command):
     This command shakes the intake and is likely going to be an energy hog,
     but it will generate vibration that you need to pop the last gamepieces from the hopper.
     """
-    def __init__(self, arm: IntakeArm, intervalSeconds=1.5):
+    def __init__(self, intake: Intake, arm: IntakeArm, intervalSeconds=1.5):
         super().__init__()
         assert intervalSeconds > 0
         self.intervalSeconds = intervalSeconds
         self.arm = arm
+        self.intake = intake
         self.start = None
         self.startTime = 0.0
         self.addRequirements(arm)
+        self.addRequirements(intake)
         SmartDashboard.putString("ShakeIntake", "created")
 
     def initialize(self):
@@ -162,11 +164,13 @@ class ShakeIntake(commands2.Command):
         SmartDashboard.putString("ShakeIntake", "started")
         self.start = self.arm.positionGoal
         self.startTime = Timer.getFPGATimestamp()
+        self.intake.setVelocityGoal(PickUpConstants.kPickupRollerSpeed, 0.1 * PickUpConstants.kPickupRollerSpeed)
 
     def end(self, interrupted: bool):
         SmartDashboard.putString("ShakeIntake", "finished")
         # at the end, return the arm to its original target
-        self.arm.setPositionGoal(IntakeArmConstants.safePosition)
+        self.arm.setPositionGoal(IntakeArmConstants.neutralPosition)
+        self.intake.stop()
 
     def execute(self) -> None:
         t = Timer.getFPGATimestamp() - self.startTime
@@ -175,4 +179,4 @@ class ShakeIntake(commands2.Command):
         if phase < 0.5:
             self.arm.setPositionGoal(IntakeArmConstants.deployedPosition)
         else:
-            self.arm.setPositionGoal(IntakeArmConstants.neutralPosition)
+            self.arm.setPositionGoal(0.75 * IntakeArmConstants.neutralPosition + 0.25 * IntakeArmConstants.stowedPosition)
