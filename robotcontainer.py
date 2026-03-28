@@ -166,8 +166,10 @@ class RobotContainer:
             self.turret.forgetZero()
             self.hoodServo.forgetZero()
 
-        aButton = self.driverController.button(XboxController.Button.kA)
-        aButton.onTrue(InstantCommand(rehome))
+        aButtonD = self.driverController.button(XboxController.Button.kA)
+        aButtonD.onTrue(InstantCommand(rehome))
+        aButtonO = self.operatorController.button(XboxController.Button.kA)
+        aButtonO.onTrue(InstantCommand(rehome))
 
         yButtonD = self.driverController.button(XboxController.Button.kY)
         yButtonD.onTrue(StowIntake(self.intake_arm))
