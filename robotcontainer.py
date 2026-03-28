@@ -170,15 +170,18 @@ class RobotContainer:
             ShootFromFixedPosition(self.turret, self.shooter, self.indexer)
         )
 
-        # example 2: when "POV-up" button pressed, reset robot field position to "facing North"
-        resetFacingNorthCommand = ResetXY(x=1.0, y=4.0, headingDegrees=0, drivetrain=self.robotDrive)
+        # example 2: when "POV-up" button pressed, reset robot field position to "intake facing the players"
+        resetFacingNorthCommand = ConditionalCommand(
+            ResetXY(x=1.0, y=4.025, headingDegrees=180, drivetrain=self.robotDrive),
+            ResetXY(x=AutoConstants.kFieldTags.getFieldLength() - 1.0, y=4.025, headingDegrees=0, drivetrain=self.robotDrive),
+            lambda: DriverStation.getAlliance() == DriverStation.Alliance.kBlue)
         povUpButton = self.driverController.povUp()
         povUpButton.whileTrue(resetFacingNorthCommand)
 
         # example 3: when "POV-down" is pressed, reset robot field position to "facing South"
-        resetFacingSouthCommand = ResetXY(x=14.0, y=6.0, headingDegrees=180, drivetrain=self.robotDrive)
-        povDownButton = self.driverController.povDown()
-        povDownButton.whileTrue(resetFacingSouthCommand)
+        # resetFacingSouthCommand = ResetXY(x=14.0, y=6.0, headingDegrees=180, drivetrain=self.robotDrive)
+        # povDownButton = self.driverController.povDown()
+        # povDownButton.whileTrue(resetFacingSouthCommand)
 
         from commands.point_towards_location import PointTowardsLocation
 
