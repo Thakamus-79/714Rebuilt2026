@@ -146,6 +146,14 @@ class RobotContainer:
             self.robotDrive.simPhysics = BadSimPhysics(self.robotDrive, robot)
 
 
+    def resetXYTwice(self, x, y, headingDegrees, flipIfRed: bool, delay=0.05):
+        return ResetXY(x, y, headingDegrees, drivetrain=self.robotDrive, flipIfRed=flipIfRed).andThen(
+            WaitCommand(delay)
+        ).andThen(
+            ResetXY(x, y, headingDegrees, drivetrain=self.robotDrive, flipIfRed=flipIfRed)
+        )
+
+
     def configureButtonBindings(self) -> None:
         """
         Use this method to define your button->command mappings. Buttons can be created by
@@ -171,10 +179,7 @@ class RobotContainer:
         )
 
         # example 2: when "POV-up" button pressed, reset robot field position to "intake facing the players"
-        resetFacingNorthCommand = ConditionalCommand(
-            ResetXY(x=2.5, y=4.025, headingDegrees=180, drivetrain=self.robotDrive),
-            ResetXY(x=AutoConstants.kFieldTags.getFieldLength() - 2.5, y=4.025, headingDegrees=0, drivetrain=self.robotDrive),
-            lambda: DriverStation.getAlliance() == DriverStation.Alliance.kBlue)
+        resetFacingNorthCommand = self.resetXYTwice(x=2.5, y=4.025, headingDegrees=180, flipIfRed=True)
         povUpButton = self.driverController.povUp()
         povUpButton.whileTrue(resetFacingNorthCommand)
 
