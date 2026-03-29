@@ -345,6 +345,26 @@ class KeepFeederClear(commands2.Command):
         return False
 
 
+class UnjamFeeder(commands2.Command):
+    """
+    Clears jams in the feeder by slowly rotating it backwards
+    """
+    def __init__(self, indexer: Indexer):
+        super().__init__()
+        self.indexer = indexer
+        self.addRequirements(indexer)
+
+    def initialize(self):
+        self.indexer.setFeederVelocityGoal(-0.075 * IndexerConstants.kTargetFeederVelocity)
+        self.indexer.setWashingMachineVelocityGoal(-1.25 * IndexerConstants.kWashingMachineVelocity)
+
+    def end(self, interrupted: bool):
+        self.indexer.stop()
+
+    def isFinished(self) -> bool:
+        return False
+
+
 class ShootFromFixedPosition(commands2.Command):
     rpm: SendableChooser | None = None
 

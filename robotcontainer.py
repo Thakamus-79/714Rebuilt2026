@@ -16,7 +16,7 @@ from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, R
 from commands.drive_towards_object import SwerveTowardsObject
 from commands.intake import PickUp, SuppressIntake, Eject, StowIntake, ShakeIntake
 from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange, KeepHoodDown, KeepFeederClear, \
-    ShootFromFixedPosition
+    ShootFromFixedPosition, UnjamFeeder
 from commands.aimtodirection import AimToDirection
 from commands.swervetopoint import SwerveToPoint
 from commands.trajectory import SwerveTrajectory, SimpleTrajectory
@@ -185,10 +185,9 @@ class RobotContainer:
         povUpButton = self.driverController.povUp()
         povUpButton.whileTrue(resetFacingNorthCommand)
 
-        # example 3: when "POV-down" is pressed, reset robot field position to "facing South"
-        # resetFacingSouthCommand = ResetXY(x=14.0, y=6.0, headingDegrees=180, drivetrain=self.robotDrive)
-        # povDownButton = self.driverController.povDown()
-        # povDownButton.whileTrue(resetFacingSouthCommand)
+        # POV down: unjam the shooter
+        povDownButton = self.driverController.povDown()
+        povDownButton.whileTrue(UnjamFeeder(self.indexer))
 
         from commands.point_towards_location import PointTowardsLocation
 
