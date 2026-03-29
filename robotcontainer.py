@@ -252,8 +252,6 @@ class RobotContainer:
         self.driverController.povLeft().whileTrue(PickUp(self.intake, arm=self.intake_arm))
         self.driverController.povRight().whileTrue(ShakeIntake(self.intake, self.intake_arm))
 
-        self.driverController.button(1).whileTrue(keepNoseAt45Degrees)
-
 
 
 
