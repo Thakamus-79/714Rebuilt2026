@@ -95,8 +95,8 @@ class FiringTable(Subsystem):
 
         if FiringTable.ballVelocity is None:
             FiringTable.ballVelocity = SendableChooser()
-            FiringTable.ballVelocity.setDefaultOption("99", 99.0)
-            for f in [1.4, 2.0, 2.8, 4.0, 6.0, 9.8, 13.0, 18.0]:
+            FiringTable.ballVelocity.setDefaultOption("6.0", 6.0)
+            for f in [1.4, 2.0, 2.8, 4.0, 5.0, 7.0, 8.0, 9.8, 12.0, 18.0, 99.0]:
                 FiringTable.ballVelocity.addOption(str(f), f)
             SmartDashboard.putData("FiringTable/ballVelocity", FiringTable.ballVelocity)
 
