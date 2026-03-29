@@ -186,6 +186,6 @@ class ShakeIntake(commands2.Command):
         phase = (t / self.intervalSeconds.getSelected()) % 1.0
         # ^^ this phase oscillates between 0.0 and 0.99999, the arm will go up when phase<0.5 and go down otherwise
         if phase < 0.5:
-            self.arm.setPositionGoal(IntakeArmConstants.neutralPosition)
+            self.arm.setPositionGoal(0.875 * IntakeArmConstants.neutralPosition + 0.125 * IntakeArmConstants.stowedPosition)
         else:
             self.arm.setPositionGoal(0.75 * IntakeArmConstants.neutralPosition + 0.25 * IntakeArmConstants.stowedPosition)
