@@ -355,7 +355,7 @@ class UnjamFeeder(commands2.Command):
         self.addRequirements(indexer)
 
     def initialize(self):
-        self.indexer.setFeederVelocityGoal(-0.075 * IndexerConstants.kTargetFeederVelocity)
+        self.indexer.setFeederVelocityGoal(-0.15 * IndexerConstants.kTargetFeederVelocity)
         self.indexer.setWashingMachineVelocityGoal(-1.25 * IndexerConstants.kWashingMachineVelocity)
 
     def end(self, interrupted: bool):
