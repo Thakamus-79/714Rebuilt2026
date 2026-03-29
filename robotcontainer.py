@@ -742,13 +742,13 @@ class RobotContainer:
         testGyro = turnRight.andThen(turnLeft).andThen(backToZero)
 
         squareDance = (
-            SwerveToPoint(x= 1, y= 0, headingDegrees= 0 , speed= 0.25 , drivetrain=self.robotDrive)
+            SwerveToPoint(x= 1, y= 0, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
         ).andThen(
-            SwerveToPoint( x= 1, y= -1, headingDegrees= 0 , speed= 0.25 , drivetrain=self.robotDrive)
+            SwerveToPoint( x= 1, y= -1, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
         ).andThen(
-            SwerveToPoint( x= 0, y= -1, headingDegrees= 0 , speed= 0.25 , drivetrain=self.robotDrive)
+            SwerveToPoint( x= 0, y= -1, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
         ).andThen(
-            SwerveToPoint( x= 0, y= 0, headingDegrees= 0 , speed= 0.25 , drivetrain=self.robotDrive)
+            SwerveToPoint( x= 0, y= 0, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
         )
 
         testArmIntake = PickUp(intakeRollers=self.intake, arm=self.intake_arm).withTimeout(2)
