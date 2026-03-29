@@ -18,7 +18,7 @@ class RunIntakeRollersAtIdleSpeed(commands2.Command):
         self.addRequirements(intake)
 
     def initialize(self):
-        self.intake.setVelocityGoal(PickUpConstants.kPickupRollerSpeed * 0.67, PickUpConstants.kPickupRollerSpeed * 0.1)
+        self.intake.setVelocityGoal(PickUpConstants.kPickupRollerSpeed * 0.5, PickUpConstants.kPickupRollerSpeed * 0.1)
 
     def end(self, interrupted: bool):
         self.intake.stop()
