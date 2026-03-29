@@ -189,6 +189,8 @@ class RobotContainer:
         # POV down: unjam the shooter
         povDownButton = self.driverController.povDown()
         povDownButton.whileTrue(UnjamFeeder(self.indexer))
+        povDownButtonO = self.operatorController.povDown()
+        povDownButtonO.whileTrue(UnjamFeeder(self.indexer))
 
         from commands.point_towards_location import PointTowardsLocation
 
