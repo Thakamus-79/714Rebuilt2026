@@ -31,7 +31,7 @@ class Constants:
     # which range of motion we want from this hood?
     minPosition = -48.0  # motor revolutions
     stowedPosition = -32.0
-    neutralPosition = -2.5
+    neutralPosition = -13.5  # -12.5 is only for 714
     deployedPosition = 10.0  # 8630: +6.3
     maxPosition = 10.5  # 8630: +8.0
     initialPositionGoal = neutralPosition
