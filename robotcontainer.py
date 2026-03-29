@@ -755,7 +755,7 @@ class RobotContainer:
         stopFeeder = InstantCommand(lambda: self.indexer.stop())
         testFeeder = startFeeder.andThen(WaitCommand(2).andThen(stopFeeder))
 
-        startWasher = InstantCommand(lambda: self.indexer.setWashingMachineVelocityGoal(200))
+        startWasher = InstantCommand(lambda: self.indexer.setWashingMachineVelocitySetpoint(0.5))
         stopWasher = InstantCommand(lambda: self.indexer.stop())
         testWasher = startWasher.andThen(WaitCommand(2).andThen(stopWasher))
 

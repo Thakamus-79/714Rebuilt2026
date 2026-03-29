@@ -9,7 +9,7 @@ class IndexerConstants:
     kWashingMachine_CANID = 26
 
     kTargetFeederVelocity = 4000.0  # RPM (please calibrate!)
-    kWashingMachineVelocity = 4000.0  # RPM (please calibrate!)
+    kWashingMachineSetpoint = 0.7  # RPM (please calibrate!)
 
     kFF = 21.8 / 10000
     kPFeeder = 0.6 / 10000
@@ -70,7 +70,7 @@ class Indexer(Subsystem):
 
     def feedGamepieceIntoShooter(self):
         self.setFeederVelocityGoal(IndexerConstants.kTargetFeederVelocity)
-        self.setWashingMachineVelocityGoal(IndexerConstants.kWashingMachineVelocity)
+        self.setWashingMachineVelocitySetpoint(IndexerConstants.kWashingMachineSetpoint)
 
 
     def setFeederVelocityGoal(self, rpm):
@@ -78,10 +78,8 @@ class Indexer(Subsystem):
         self.feederController1.setReference(self.feederVelocityGoal, SparkBase.ControlType.kVelocity)
         self.feederController2.setReference(-self.feederVelocityGoal, SparkBase.ControlType.kVelocity)
 
-    def setWashingMachineVelocityGoal(self, rpm):
-        self.washingMachineController.setReference(0.7, SparkBase.ControlType.kDutyCycle)
-        #self.washingMachineVelocityGoal = max(IndexerConstants.maxRPM, min(IndexerConstants.maxRPM, rpm))
-        #self.washingMachineController.setReference(self.washingMachineVelocityGoal, SparkBase.ControlType.kVelocity)
+    def setWashingMachineVelocitySetpoint(self, setpoint=0.7):
+        self.washingMachineController.setReference(setpoint, SparkBase.ControlType.kDutyCycle)
 
 
     def getFeederVelocity(self):
