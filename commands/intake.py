@@ -11,6 +11,25 @@ class PickUpConstants:
     kEjectRollerSpeed = +1550  # rpm
 
 
+class RunIntakeRollersAtIdleSpeed(commands2.Command):
+    def __init__(self, intake: Intake):
+        super().__init__()
+        self.intake = intake
+        self.addRequirements(intake)
+
+    def initialize(self):
+        self.intake.setVelocityGoal(PickUpConstants.kPickupRollerSpeed * 0.67, PickUpConstants.kPickupRollerSpeed * 0.1)
+
+    def end(self, interrupted: bool):
+        self.intake.stop()
+
+    def execute(self):
+        return  # do nothing here
+
+    def isFinished(self) -> bool:
+        return False  # this never finishes on its own
+
+
 class StowIntake(commands2.Command):
     """
     Usage example:

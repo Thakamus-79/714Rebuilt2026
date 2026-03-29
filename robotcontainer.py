@@ -14,7 +14,7 @@ from wpilib import XboxController, Servo, DriverStation
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
 
 from commands.drive_towards_object import SwerveTowardsObject
-from commands.intake import PickUp, SuppressIntake, Eject, StowIntake, ShakeIntake
+from commands.intake import PickUp, SuppressIntake, Eject, StowIntake, ShakeIntake, RunIntakeRollersAtIdleSpeed
 from commands.shooting import GetReadyAndKeepShooting, GetReadyToShoot, GetInRange, KeepHoodDown, KeepFeederClear, \
     ShootFromFixedPosition, UnjamFeeder
 from commands.aimtodirection import AimToDirection
@@ -86,6 +86,7 @@ class RobotContainer:
         self.intake = Intake(
             inverted= False
         )
+        self.intake.setDefaultCommand(RunIntakeRollersAtIdleSpeed(self.intake))
         self.intake_arm = IntakeArm(
             leadMotorCANId=2, motorClass=SparkFlex
         )
