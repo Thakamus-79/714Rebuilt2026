@@ -244,8 +244,6 @@ class RobotContainer:
         #opperator controls
         self.operatorController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)
         self.operatorController.button(XboxController.Button.kB).whileTrue(getReadyAndShootLowBattery)
-        self.operatorController.button(1).whileTrue(getReadyAndShoot)
-        return
 
         #driver controls
         self.driverController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)
