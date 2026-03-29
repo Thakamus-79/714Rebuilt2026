@@ -230,9 +230,20 @@ class RobotContainer:
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
         )
+        getReadyAndShootLowBattery = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+            rpmFactor=1.05,
+        )
+
         #opperator controls
         self.operatorController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)
-        self.operatorController.button(XboxController.Button.kB).whileTrue(getReadyAndShoot)
+        self.operatorController.button(XboxController.Button.kB).whileTrue(getReadyAndShootLowBattery)
+        self.operatorController.button(1).whileTrue(getReadyAndShoot)
+        return
 
         #driver controls
         self.driverController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)

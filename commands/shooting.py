@@ -130,6 +130,7 @@ class GetReadyToShoot(commands2.Command):
         shooter: Shooter,
         turret: Turret | None,
         drivetrain: DriveSubsystem | None,
+        rpmFactor: float = 1.0,
         runForever = True,
     ):
         super().__init__()
@@ -138,6 +139,7 @@ class GetReadyToShoot(commands2.Command):
         self.shooter = shooter
         self.turret = turret
         self.drivetrain = drivetrain
+        self.rpmFactor = rpmFactor
         self.readyAfterTime = 0.0
         if self.turret is not None:
             assert self.drivetrain is None, "do not supply drivetrain for aiming if we already have a turret"
@@ -153,8 +155,13 @@ class GetReadyToShoot(commands2.Command):
         # set the correct RPM (and hood servo position) in the shooter
         ft = self.firingTable
         distance = ft.distance()
-        rpm = ft.recommendedShooterRpm()
         hoodPosition = ft.recommendedFiringHoodPosition()
+
+        # scale the RPM value up or down
+        rpm = ft.recommendedShooterRpm()
+        rpm *= ft.factor.getSelected()
+        rpm *= self.rpmFactor
+
         self.shooter.setVelocityGoal(rpm, rpm * Constants.RPM_TOLERANCE_FACTOR)
         self.shooter.setHoodServoGoal(hoodPosition)
 
@@ -258,8 +265,9 @@ class GetReadyAndKeepShooting(GetReadyToShoot):
         turret: Turret | None,
         drivetrain: DriveSubsystem | None,
         indexer: Indexer,
+        rpmFactor: float | None = 1.0,
     ):
-        super().__init__(firingTable, shooter, turret, drivetrain)
+        super().__init__(firingTable, shooter, turret, drivetrain, rpmFactor)
         self.indexer = indexer
         self.addRequirements(indexer)
 

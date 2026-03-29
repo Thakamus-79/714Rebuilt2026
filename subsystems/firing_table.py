@@ -38,6 +38,7 @@ RECOMMENDED_SHOOTER_HOOD_POSITION_BY_DISTANCE = LookupTable({
 
 class FiringTable(Subsystem):
     rpm: SendableChooser | None = None
+    factor: SendableChooser | None = None
     hoodPos: SendableChooser | None = None
     ballVelocity: SendableChooser | None = None
 
@@ -68,6 +69,15 @@ class FiringTable(Subsystem):
         self.goal: Translation2d | None = None
         self.vectorToGoal: Translation2d | None = None
         self.shooterLocation: Translation2d | None = None
+
+        if FiringTable.factor is None:
+            FiringTable.factor = SendableChooser()
+            for percent in range(80, 100, 1):
+                FiringTable.factor.addOption(f'0{percent}%', percent / 100)
+            FiringTable.factor.setDefaultOption("100%", 1.00)
+            for percent in range(101, 125, 1):
+                FiringTable.factor.addOption(f'{percent}%', percent / 100)
+            SmartDashboard.putData("FiringTable/factor", FiringTable.factor)
 
         if FiringTable.rpm is None:
             FiringTable.rpm = SendableChooser()
@@ -164,7 +174,7 @@ class FiringTable(Subsystem):
         timeOfFlight = (self.goal - self.shooterLocation).norm() / self.ballVelocity.getSelected()
 
         adjustment = Translation2d(-self.drivetrain.vx * timeOfFlight, -self.drivetrain.vy * timeOfFlight)
-        SmartDashboard.putString("FiringTable/adjustment", str((round(adjustment.x, 2), round(adjustment.y, 2))))
+        #SmartDashboard.putString("FiringTable/adjustment", str((round(adjustment.x, 2), round(adjustment.y, 2))))
         effectiveGoal = self.goal + adjustment
         if self.drivetrain.field is not None:
             self.drivetrain.field.getObject("effectiveGoal").setPose(Pose2d(effectiveGoal, Rotation2d()))
