@@ -12,6 +12,8 @@ from subsystems.drivesubsystem import DriveSubsystem
 from constants import LookupTable
 
 
+EFFECTIVE_HORIZONTAL_SHOT_DISTANCE = 2.7
+
 # TODO : calibrate this lookup table on a real robot, and add more points
 RECOMMENDED_SHOOTER_RPM_BY_DISTANCE = LookupTable({
     1.44 : 2375,
@@ -95,8 +97,8 @@ class FiringTable(Subsystem):
 
         if FiringTable.ballVelocity is None:
             FiringTable.ballVelocity = SendableChooser()
-            FiringTable.ballVelocity.setDefaultOption("6.0", 6.0)
-            for f in [1.4, 2.0, 2.8, 4.0, 5.0, 7.0, 8.0, 9.8, 12.0, 18.0, 99.0]:
+            FiringTable.ballVelocity.setDefaultOption("1.2", 6.0)
+            for f in [0.6, 0.8, 1.0, 1.4, 1.7, 2.0, 3.0, 5.0, 99.0]:
                 FiringTable.ballVelocity.addOption(str(f), f)
             SmartDashboard.putData("FiringTable/ballVelocity", FiringTable.ballVelocity)
 
@@ -171,7 +173,11 @@ class FiringTable(Subsystem):
                 self.goal = self.findNearestStash(pose, self.fuelStashesIfBlue) or self.goalIfBlue
 
         self.shooterLocation = pose.translation() + self.shooterLocationOnDrivetrain.rotateBy(pose.rotation())
-        timeOfFlight = (self.goal - self.shooterLocation).norm() / self.ballVelocity.getSelected()
+        distance = (self.goal - self.shooterLocation).norm()
+        ballVelocityTotal = self.ballVelocity.getSelected()
+        cosine = min(1.0, distance / EFFECTIVE_HORIZONTAL_SHOT_DISTANCE)
+        ballVelocityHorizontal = ballVelocityTotal * cosine
+        timeOfFlight = distance / ballVelocityHorizontal
 
         adjustment = Translation2d(-self.drivetrain.vx * timeOfFlight, -self.drivetrain.vy * timeOfFlight)
         #SmartDashboard.putString("FiringTable/adjustment", str((round(adjustment.x, 2), round(adjustment.y, 2))))

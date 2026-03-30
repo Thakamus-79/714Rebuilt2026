@@ -22,8 +22,11 @@ from .wrapped_navx import NavxGyro
 from .swervemodule import SwerveModule
 from rev import SparkMax, SparkFlex
 import navx
+from collections import deque
+import numpy as np
 
 
+VELOCITY_FILTER_WINDOW = 5
 GYRO_USING_INVERTED_Y_AXIS = False
 
 GYRO_OVERSHOOT_FRACTION = -3.25 / 360
@@ -104,6 +107,7 @@ class DriveSubsystem(Subsystem):
         self.odometryHeadingOffset = Rotation2d(0)
         self.resetOdometry(Pose2d(14.0, 4.05, Rotation2d()))  # initial position on the field
         self.x, self.y, self.t, self.vx, self.vy = self.odometryPose.x, self.odometryPose.y, 0.0, 0.0, 0.0
+        self.vxbuf, self.vybuf = deque(maxlen=VELOCITY_FILTER_WINDOW), deque(maxlen=VELOCITY_FILTER_WINDOW)
 
         self.field = Field2d()
         SmartDashboard.putData("Field", self.field)
@@ -135,7 +139,10 @@ class DriveSubsystem(Subsystem):
         x, y, t = self.odometryPose.x, self.odometryPose.y, Timer.getFPGATimestamp()
         dt = t - self.t
         if dt > 0:
-            self.vx, self.vy = (x - self.x) / dt, (y - self.y) / dt
+            vx, vy = (x - self.x) / dt, (y - self.y) / dt
+            self.vxbuf.append(vx)
+            self.vybuf.append(vy)
+            self.vx, self.vy = np.median(self.vxbuf), np.median(self.vybuf)
             SmartDashboard.putNumber("vx", self.vx)
             SmartDashboard.putNumber("vy", self.vy)
         self.x, self.y, self.t = x, y, t
