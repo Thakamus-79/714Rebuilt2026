@@ -280,7 +280,7 @@ class GetReadyAndKeepShooting(GetReadyToShoot):
 
         # if everything is ready, feed gamepieces into the shooter
         if self.notReady:
-            self.indexer.stop()
+            self.indexer.startUnjamming()
         else:
             self.indexer.feedGamepieceIntoShooter()
 
@@ -355,8 +355,7 @@ class UnjamFeeder(commands2.Command):
         self.addRequirements(indexer)
 
     def initialize(self):
-        self.indexer.setFeederVelocityGoal(-0.15 * IndexerConstants.kTargetFeederVelocity)
-        self.indexer.setWashingMachineVelocitySetpoint(-1.25 * IndexerConstants.kWashingMachineSetpoint)
+        self.indexer.startUnjamming()
 
     def end(self, interrupted: bool):
         self.indexer.stop()
@@ -403,6 +402,10 @@ class ShootFromFixedPosition(commands2.Command):
         if t > self.tStart + 2.0:
             self.indexer.feedGamepieceIntoShooter()
             SmartDashboard.putString("ShootFromFixedPos", f"shooting")
+        else:
+            self.indexer.startUnjamming()
+            SmartDashboard.putString("ShootFromFixedPos", f"unjamming")
+
 
     def end(self, interrupted: bool):
         SmartDashboard.putString("ShootFromFixedPos", "finished")

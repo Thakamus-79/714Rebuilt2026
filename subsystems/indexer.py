@@ -113,6 +113,10 @@ class Indexer(Subsystem):
         SmartDashboard.putNumber("WashingMachine/current", self.washingMachineMotor.getOutputCurrent())
         # TO DO: add the similar things for the turntable
 
+    def startUnjamming(self):
+        self.setFeederVelocityGoal(-0.15 * IndexerConstants.kTargetFeederVelocity)
+        self.setWashingMachineVelocitySetpoint(-1.0 * IndexerConstants.kWashingMachineSetpoint)
+
 
 def _motorConfig(kFF, kP, currentLimit) -> SparkBaseConfig:
     config = SparkBaseConfig()
