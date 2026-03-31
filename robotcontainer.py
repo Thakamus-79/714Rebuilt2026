@@ -93,10 +93,7 @@ class RobotContainer:
 
         self.limelightLocalizer = LimelightLocalizer(self.robotDrive)
 
-        # self.centerCamera = LimelightCamera("limelight-center")
-        self.limelight_shooter = LimelightCamera("limelight-shooter", isUsb0=False)
-        self.limelight_side = LimelightCamera("limelight-side", isUsb0=False)
-
+        self.limelight_shooter = LimelightCamera("limelight-shooter")
         self.limelightLocalizer.addCamera(
             self.limelight_shooter,
             cameraPoseOnRobot=Translation3d(x=-9.75 * 0.0254, y=9.5 * 0.0254, z=16.5 * 0.0254),
@@ -104,6 +101,7 @@ class RobotContainer:
             cameraPitchAngleDegrees=24
         )
 
+        self.limelight_side = LimelightCamera("limelight-side")
         self.limelightLocalizer.addCamera(
             self.limelight_side,
             cameraPoseOnRobot=Translation3d(x=-6.5 * 0.0254, y=13.5 * 0.0254, z=16.5 * 0.0254),
@@ -112,8 +110,6 @@ class RobotContainer:
         )
 
         self.pickupCamera = LimelightCamera("limelight-intake")
-
-
 
         # The driver's controller (joystick)
         self.driverController = CommandGenericHID(OIConstants.kDriverControllerPort)
@@ -135,7 +131,7 @@ class RobotContainer:
                 speedFactor=lambda: 0.5 + 0.5 * self.driverController.getRawAxis(XboxController.Axis.kLeftTrigger),
                 forwardSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftY),
                 leftSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftX),
-                rotationSpeed=lambda: -0.45 * self.driverController.getRawAxis(XboxController.Axis.kRightX),
+                rotationSpeed=lambda: -0.35 * self.driverController.getRawAxis(XboxController.Axis.kRightX),
                 fieldRelative=lambda: not fpvButton.getAsBoolean(),
                 deadband=OIConstants.kDriveDeadband,
                 rateLimit=True,
@@ -519,29 +515,25 @@ class RobotContainer:
                 .andThen(driveInReverse).andThen(scoringWhenReady))
 
     def createAutoCenterToHuman(self):
-        setStartPose = self.resetXYTwice(
-            x=3.527, y=4.025, headingDegrees=+270, flipIfRed=True
-        )
+        setStartPose = ResetXY(x=3.527, y=4.025, headingDegrees=270, drivetrain=self.robotDrive, flipIfRed=True)
 
-        shootFromThere = SwerveToPoint(
-            x=3.250, y=4.025, headingDegrees=+270, drivetrain=self.robotDrive, flipIfRed=True, speed=0.5,
-        ).andThen(
-            (
-                ShootFromFixedPosition(self.turret, self.shooter, self.indexer).deadlineFor(
-                    ShakeIntake(self.intake, self.intake_arm)
-                )
-            ).withTimeout(5.0)
-        )
+        speed = 1
 
-        speed = 0.3
+        shootWhenReady = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+        ).withTimeout(seconds=4.0)
 
         driveTrajectory = SimpleTrajectory(
             drivetrain=self.robotDrive,
             speed=speed,
             waypoints=[
-                (3.200, 3.70, 0.0),  # the last number can be 270 instead of zero, if the side camera works
+                (3.200, 3.70, 270),
             ],
-            endpoint=(2.20, 1.152, 0.0),
+            endpoint=(2.20, 0.652, 0.0),
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=True,  # to keep driving onto next command, set =False
             swerve=True,
@@ -572,7 +564,7 @@ class RobotContainer:
 
 
         commands = setStartPose.andThen(
-            shootFromThere
+            shootWhenReady
         ).andThen(
             driveTrajectory
         ).andThen(
