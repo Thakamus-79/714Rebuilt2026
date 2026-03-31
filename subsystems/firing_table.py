@@ -97,7 +97,7 @@ class FiringTable(Subsystem):
 
         if FiringTable.ballVelocity is None:
             FiringTable.ballVelocity = SendableChooser()
-            FiringTable.ballVelocity.setDefaultOption("1.2", 6.0)
+            FiringTable.ballVelocity.setDefaultOption("1.2", 1.2)
             for f in [0.6, 0.8, 1.0, 1.4, 1.7, 2.0, 3.0, 5.0, 99.0]:
                 FiringTable.ballVelocity.addOption(str(f), f)
             SmartDashboard.putData("FiringTable/ballVelocity", FiringTable.ballVelocity)
@@ -174,7 +174,7 @@ class FiringTable(Subsystem):
 
         self.shooterLocation = pose.translation() + self.shooterLocationOnDrivetrain.rotateBy(pose.rotation())
         distance = (self.goal - self.shooterLocation).norm()
-        ballVelocityTotal = self.ballVelocity.getSelected()
+        ballVelocityTotal = self.ballVelocity.getSelected() or 1.2
         cosine = min(1.0, distance / EFFECTIVE_HORIZONTAL_SHOT_DISTANCE)
         ballVelocityHorizontal = ballVelocityTotal * cosine
         timeOfFlight = distance / ballVelocityHorizontal
