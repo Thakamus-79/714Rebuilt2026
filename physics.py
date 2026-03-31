@@ -48,10 +48,13 @@ class PhysicsEngine:
         self.turret = robot.robotContainer.turret
 
         # Shooter
-        shooter_gearbox = DCMotor.NEO(1)
-        self.shooter_motor = SparkFlexSim(robot.robotContainer.shooter.leadMotor, shooter_gearbox)
-        self.shooter_encoder = SparkRelativeEncoderSim(robot.robotContainer.shooter.leadMotor)
-        self.shooter = robot.robotContainer.shooter
+        self.shooter_motor = None
+        self.shooter_encoder = None
+        if robot.robotContainer.shooter.revLeadMotor:
+            shooter_gearbox = DCMotor.NEO(1)
+            self.shooter_motor = SparkFlexSim(robot.robotContainer.shooter.revLeadMotor, shooter_gearbox)
+            self.shooter_encoder = SparkRelativeEncoderSim(robot.robotContainer.shooter.revLeadMotor)
+            self.shooter = robot.robotContainer.shooter
 
 
     def update_sim(self, now: float, tm_diff: float) -> None:
@@ -75,6 +78,7 @@ class PhysicsEngine:
         self.turret_motor.iterate(self.turret_motor.getVelocity(), 12.0, tm_diff)
 
         # Simulate the shooter
-        shooter_dv = (self.shooter.velocityGoal - self.shooter_motor.getVelocity()) * ShooterConstants.kP * 400.0
-        self.shooter_motor.setVelocity(shooter_dv + self.shooter_motor.getVelocity())
-        self.shooter_motor.iterate(self.shooter_motor.getVelocity(), 12.0, tm_diff)
+        if self.shooter_motor is not None:
+            shooter_dv = (self.shooter.velocityGoal - self.shooter_motor.getVelocity()) * ShooterConstants.kP * 400.0
+            self.shooter_motor.setVelocity(shooter_dv + self.shooter_motor.getVelocity())
+            self.shooter_motor.iterate(self.shooter_motor.getVelocity(), 12.0, tm_diff)

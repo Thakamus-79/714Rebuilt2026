@@ -1,4 +1,8 @@
 from commands2 import Subsystem
+from phoenix6.configs import TalonFXConfiguration
+from phoenix6.controls import Follower, MotionMagicVelocityVoltage
+from phoenix6.hardware import TalonFX
+from phoenix6.signals import NeutralModeValue, InvertedValue, MotorAlignmentValue
 from rev import SparkBaseConfig, SparkBase, SparkFlex, ResetMode, PersistMode
 from wpilib import SmartDashboard, Servo
 from typing import List
@@ -32,7 +36,7 @@ class Shooter(Subsystem):
     ```
 
     """
-    def __init__(self, inverted=True, hoodServos: List[Servo | Hood] = ()) -> None:
+    def __init__(self, inverted=True, motorClass=SparkFlex, hoodServos: List[Servo | Hood] = ()) -> None:
         super().__init__()
 
         self.hoodServos = hoodServos
@@ -43,22 +47,44 @@ class Shooter(Subsystem):
         self.hoodServoGoal = 0.0
         self.setHoodServoGoal(self.hoodServoGoal)
 
-        self.leadMotor = SparkFlex(ShooterConstants.kShooterMotorA_CANID, SparkBase.MotorType.kBrushless)
-        self.leadMotor.configure(
-            _getLeadMotorConfig(),
-            ResetMode.kResetSafeParameters,
-            PersistMode.kPersistParameters,
-        )
+        self.revLeadMotor = None
+        self.revFollowMotor = None
+        self.revPidController = None
+        self.revEncoder = None
 
-        self.followMotor = SparkFlex(ShooterConstants.kShooterMotorB_CANID, SparkBase.MotorType.kBrushless)
-        self.followMotor.configure(
-            _getFollowMotorConfig(),
-            ResetMode.kResetSafeParameters,
-            PersistMode.kPersistParameters,
-        )
+        if motorClass == SparkFlex:
+            self.revLeadMotor = SparkFlex(ShooterConstants.kShooterMotorA_CANID, SparkBase.MotorType.kBrushless)
+            self.revLeadMotor.configure(
+                _getLeadMotorConfig(),
+                ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters,
+            )
+            self.revFollowMotor = SparkFlex(ShooterConstants.kShooterMotorB_CANID, SparkBase.MotorType.kBrushless)
+            self.revFollowMotor.configure(
+                _getFollowMotorConfig(),
+                ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters,
+            )
+            self.revPidController = self.revLeadMotor.getClosedLoopController()
+            self.revEncoder = self.revLeadMotor.getEncoder()
 
-        self.pidController = self.leadMotor.getClosedLoopController()
-        self.encoder = self.leadMotor.getEncoder()
+        self.talonLeadMotor = None
+        self.talonFollowMotor = None
+        self.talonControlRequest = MotionMagicVelocityVoltage(0, acceleration=250, slot=0)
+
+        if motorClass == TalonFX:
+            self.talonLeadMotor = TalonFX(ShooterConstants.kShooterMotorA_CANID)
+            self.talonFollowMotor = TalonFX(ShooterConstants.kShooterMotorA_CANID)
+            leadConfig = TalonFXConfiguration()
+            leadConfig.motor_output.neutral_mode = NeutralModeValue.COAST
+            leadConfig.motor_output.inverted = InvertedValue.COUNTER_CLOCKWISE_POSITIVE
+            leadConfig.slot0.k_p = ShooterConstants.kP * 0.55
+            leadConfig.slot0.k_i = 0
+            leadConfig.slot0.k_d = 0
+            leadConfig.slot0.k_v = ShooterConstants.kFF * 0.55
+            self.talonLeadMotor.configurator.apply(leadConfig)
+            self.talonFollowMotor.set_control(Follower(self.talonLeadMotor.device_id, MotorAlignmentValue.OPPOSED))
+
         self.velocityGoal = 0
         self.velocityTolerance = 0
         self.inverted = -1 if inverted else 1
@@ -85,10 +111,17 @@ class Shooter(Subsystem):
     def setVelocityGoal(self, rpm, rpmTolerance):
         self.velocityTolerance = rpmTolerance
         self.velocityGoal = max(-ShooterConstants.maxRPM, min(ShooterConstants.maxRPM, rpm))
-        self.pidController.setReference(self.velocityGoal * self.inverted, SparkBase.ControlType.kVelocity)
+        if self.revPidController is not None:
+            self.revPidController.setReference(self.velocityGoal * self.inverted, SparkBase.ControlType.kVelocity)
+        if self.talonLeadMotor is not None:
+            self.talonLeadMotor.set_control(self.talonControlRequest.with_velocity(self.velocityGoal * self.inverted))
 
     def getVelocity(self):
-        return self.encoder.getVelocity() * self.inverted
+        if self.revEncoder is not None:
+            return self.revEncoder.getVelocity() * self.inverted
+        if self.talonLeadMotor is not None:
+            return self.talonLeadMotor.get_velocity().value * self.inverted
+        return float('nan')
 
     def getVelocityGoal(self):
         return self.velocityGoal * self.inverted
@@ -101,12 +134,25 @@ class Shooter(Subsystem):
             self.reportedVelocitySeen = seen
             SmartDashboard.putNumber("Shooter/rpmGoal", goal)
             self.reportedVelocityGoal = goal
-        SmartDashboard.putNumber("Shooter/CurrentL", self.leadMotor.getOutputCurrent())
-        SmartDashboard.putNumber("Shooter/CurrentF", self.followMotor.getOutputCurrent())
+        if self.revLeadMotor is not None:
+            SmartDashboard.putNumber("Shooter/CurrentL", self.revLeadMotor.getOutputCurrent())
+            SmartDashboard.putNumber("Shooter/CurrentF", self.revFollowMotor.getOutputCurrent())
+        if self.talonLeadMotor is not None:
+            SmartDashboard.putNumber(
+                "Shooter/CurrentL",
+                self.talonLeadMotor.get_stator_current().value + self.talonLeadMotor.get_supply_current().value
+            )
+            SmartDashboard.putNumber(
+                "Shooter/CurrentF",
+                self.talonFollowMotor.get_stator_current().value + self.talonFollowMotor.get_supply_current().value
+            )
 
 
     def stop(self):
-        self.leadMotor.stopMotor()
+        if self.revLeadMotor is not None:
+            self.revLeadMotor.stopMotor()
+        if self.talonLeadMotor is not None:
+            self.talonLeadMotor.stopMotor()
         self.velocityTolerance = 0
         self.velocityGoal = 0
 
