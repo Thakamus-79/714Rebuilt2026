@@ -135,7 +135,7 @@ class RobotContainer:
                 speedFactor=lambda: 0.5 + 0.5 * self.driverController.getRawAxis(XboxController.Axis.kLeftTrigger),
                 forwardSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftY),
                 leftSpeed=lambda: -self.driverController.getRawAxis(XboxController.Axis.kLeftX),
-                rotationSpeed=lambda: -0.35 * self.driverController.getRawAxis(XboxController.Axis.kRightX),
+                rotationSpeed=lambda: -0.45 * self.driverController.getRawAxis(XboxController.Axis.kRightX),
                 fieldRelative=lambda: not fpvButton.getAsBoolean(),
                 deadband=OIConstants.kDriveDeadband,
                 rateLimit=True,
@@ -519,25 +519,29 @@ class RobotContainer:
                 .andThen(driveInReverse).andThen(scoringWhenReady))
 
     def createAutoCenterToHuman(self):
-        setStartPose = ResetXY(x=3.527, y=4.025, headingDegrees=270, drivetrain=self.robotDrive, flipIfRed=True)
+        setStartPose = self.resetXYTwice(
+            x=3.527, y=4.025, headingDegrees=+270, flipIfRed=True
+        )
 
-        speed = 1
+        shootFromThere = SwerveToPoint(
+            x=3.250, y=4.025, headingDegrees=+270, drivetrain=self.robotDrive, flipIfRed=True, speed=0.5,
+        ).andThen(
+            (
+                ShootFromFixedPosition(self.turret, self.shooter, self.indexer).deadlineFor(
+                    ShakeIntake(self.intake, self.intake_arm)
+                )
+            ).withTimeout(5.0)
+        )
 
-        shootWhenReady = GetReadyAndKeepShooting(
-            firingTable=self.firingTable,
-            shooter=self.shooter,
-            turret=self.turret,
-            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
-            indexer=self.indexer,
-        ).withTimeout(seconds=4.0)
+        speed = 0.3
 
         driveTrajectory = SimpleTrajectory(
             drivetrain=self.robotDrive,
             speed=speed,
             waypoints=[
-                (3.200, 3.70, 270),
+                (3.200, 3.70, 0.0),  # the last number can be 270 instead of zero, if the side camera works
             ],
-            endpoint=(2.20, 0.652, 0.0),
+            endpoint=(2.20, 1.152, 0.0),
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=True,  # to keep driving onto next command, set =False
             swerve=True,
@@ -568,7 +572,7 @@ class RobotContainer:
 
 
         commands = setStartPose.andThen(
-            shootWhenReady
+            shootFromThere
         ).andThen(
             driveTrajectory
         ).andThen(
