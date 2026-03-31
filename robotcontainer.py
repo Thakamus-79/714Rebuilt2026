@@ -10,7 +10,7 @@ from commands2 import cmd, InstantCommand, RunCommand, ConditionalCommand, Selec
 from commands2.button import CommandGenericHID
 from phoenix6.hardware import TalonFX
 from rev import SparkMax, SparkFlex
-from wpilib import XboxController, Servo, DriverStation
+from wpilib import XboxController, Servo, DriverStation, SmartDashboard
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Rotation3d
 
 from commands.drive_towards_object import SwerveTowardsObject
@@ -239,12 +239,14 @@ class RobotContainer:
             rpmFactor=1.05,
         )
 
+        getReadyAndShootAndShake = getReadyAndShoot.deadlineFor(ShakeIntake(self.intake, self.intake_arm))
+
         #opperator controls
-        self.operatorController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)
+        self.operatorController.button(XboxController.Button.kX).whileTrue(getReadyAndShootAndShake)
         self.operatorController.button(XboxController.Button.kB).whileTrue(getReadyAndShootLowBattery)
 
         #driver controls
-        self.driverController.button(XboxController.Button.kX).whileTrue(getReadyAndShoot)
+        self.driverController.button(XboxController.Button.kX).whileTrue(getReadyAndShootAndShake)
 
         # intake commands
         self.driverController.povLeft().whileTrue(PickUp(self.intake, arm=self.intake_arm))
@@ -262,17 +264,21 @@ class RobotContainer:
         :returns: the command to run in autonomous
         """
         command = self.chosenAuto.getSelected()
+        if command is None:
+            return InstantCommand(lambda: SmartDashboard.putString("WhyNotShooting", "chosen auto=None")).andThen(
+                WaitCommand(3.0)
+            )
         return command()
 
     def configureAutos(self):
         self.chosenAuto = wpilib.SendableChooser()
         # you can also set the default option, if needed
         self.chosenAuto.setDefaultOption("OverTheHumpLeft",self.createOverTheHumpLeftAuto)
-        self.chosenAuto.setDefaultOption("4909 Left",self.createAuto4909Left)
-        self.chosenAuto.setDefaultOption("4909 Right",self.createAuto4909Right)
-        self.chosenAuto.setDefaultOption("1678 right", self.createAuto1678Right)
-        self.chosenAuto.setDefaultOption("1678 left", self.createAuto1678Left)
-        self.chosenAuto.setDefaultOption("Hub to Human", self.createAutoCenterToHuman)
+        self.chosenAuto.addOption("4909 Left",self.createAuto4909Left)
+        self.chosenAuto.addOption("4909 Right",self.createAuto4909Right)
+        self.chosenAuto.addOption("1678 right", self.createAuto1678Right)
+        self.chosenAuto.addOption("1678 left", self.createAuto1678Left)
+        self.chosenAuto.addOption("Hub to Human", self.createAutoCenterToHuman)
         self.chosenAuto.addOption("Test2", self.getAutonomousTest2Shooting)
         self.chosenAuto.addOption("Depot",self.getAutonmouseDepotintake)
         self.chosenAuto.addOption("PointNorthLeft",self.createPointNorthLeftAuto)
@@ -527,16 +533,16 @@ class RobotContainer:
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
-        ).withTimeout(seconds=6.0)
+        ).withTimeout(seconds=4.0)
 
         driveAcrossRamp = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.25,
+            speed=0.70,
             waypoints=[
                 (3.83, 2.527, 135),
                 (5.298, 2.527, 135),
             ],
-            endpoint=(5.80, 2.527, 0),
+            endpoint=(5.80, 2.527, 135),
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=False,  # to keep driving onto next command, set =False
             swerve=True,
@@ -544,7 +550,7 @@ class RobotContainer:
 
         pickUp = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.25,
+            speed=0.4,
             waypoints=[
             ],
             endpoint=(7.80, 2.527, 0),
@@ -553,30 +559,20 @@ class RobotContainer:
             swerve=True,
         ).deadlineFor(PickUp(self.intake, self.intake_arm))
 
-        driveBackToRamp = SimpleTrajectory(
-            drivetrain=self.robotDrive,
-            speed=0.25,
-            waypoints=[
-            ],
-            endpoint=(5.844, 2.527, -45),
-            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
-            stopAtEnd=False,  # to keep driving onto next command, set =False
-            swerve=True,
-        )
-
         driveBackAcrossRamp = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.25,
+            speed=0.70,
             waypoints=[
+                (5.844, 2.527, -45),
                 (3.70, 2.527, -45),
             ],
             endpoint=(3.30, 2.527, 225),
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=True,  # to keep driving onto next command, set =False
             swerve=True,
-        ).deadlineFor(GetReadyToShoot(
+        ).deadlineFor(WaitCommand(1.50).andThen(GetReadyToShoot(
             firingTable=self.firingTable, shooter=self.shooter, turret=self.turret, drivetrain=None
-        ))
+        )))
 
         scoreWhenReady = GetReadyAndKeepShooting(
             firingTable=self.firingTable,
@@ -588,12 +584,12 @@ class RobotContainer:
 
         driveWithPinholeTurn = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.25,
+            speed=0.70,
             waypoints=[
                 (3.83, 2.527, 225),
                 (5.298, 2.527, 225),
             ],
-            endpoint=(6.139, 2.221, -20),
+            endpoint=(5.70, 2.221, 225),
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=False,  # to keep driving onto next command, set =False
             swerve=True,
@@ -601,21 +597,28 @@ class RobotContainer:
 
         driveWithPinholeTurnIntake = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.25,
+            speed=0.5,
             waypoints=[
                 (6.139, 2.221, -20),
                 (7.101, 1.773, 0),
-                (7.789, 2.527, 90),
+                (7.989, 2.527, 90),
+                (7.101, 3.249, 180),
             ],
-            endpoint=(7.101, 3.249, 180),
+            endpoint=(6.50, 2.257, 90),
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=False,  # to keep driving onto next command, set =False
             swerve=True,  # TANK DRIVE, except for the last point
-        ).deadlineFor(PickUp(intakeRollers=self.intake, arm=self.intake_arm))
+        ).deadlineFor(
+            PickUp(intakeRollers=self.intake, arm=self.intake_arm)
+        ).deadlineFor(
+            WaitCommand(2.0).andThen(GetReadyToShoot(
+                firingTable=self.firingTable, shooter=self.shooter, turret=self.turret, drivetrain=None
+            ))
+        )
 
         driveBackAcrossRamp2 = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.25,
+            speed=0.50,
             waypoints=[
                 (7.101, 3.249, 180),
                 (5.70, 2.527, -45),
@@ -644,8 +647,6 @@ class RobotContainer:
         ).andThen(
             pickUp
         ).andThen(
-            driveBackToRamp
-        ).andThen(
             driveBackAcrossRamp
         ).andThen(
             scoreWhenReady
@@ -653,8 +654,6 @@ class RobotContainer:
             driveWithPinholeTurn
         ).andThen(
             driveWithPinholeTurnIntake
-        ).andThen(
-            driveBackAcrossRamp2
         ).andThen(
             scoreWhenReady2
         )

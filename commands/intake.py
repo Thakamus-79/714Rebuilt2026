@@ -180,11 +180,11 @@ class ShakeIntake(commands2.Command):
 
         if ShakeIntake.intervalSeconds is None:
             ShakeIntake.intervalSeconds = SendableChooser()
-            ShakeIntake.intervalSeconds.setDefaultOption("0.5", 0.5)
+            ShakeIntake.intervalSeconds.addOption("1.5", 1.5)
+            ShakeIntake.intervalSeconds.setDefaultOption("1.0", 1.0)
             ShakeIntake.intervalSeconds.addOption("0.75", 0.75)
+            ShakeIntake.intervalSeconds.addOption("0.5", 0.5)
             ShakeIntake.intervalSeconds.addOption("0.33", 0.33)
-            ShakeIntake.intervalSeconds.addOption("0.17", 0.17)
-            ShakeIntake.intervalSeconds.addOption("0.1", 0.1)
             SmartDashboard.putData("ShakeIntake/intervalSeconds", ShakeIntake.intervalSeconds)
 
     def initialize(self):
@@ -205,6 +205,6 @@ class ShakeIntake(commands2.Command):
         phase = (t / self.intervalSeconds.getSelected()) % 1.0
         # ^^ this phase oscillates between 0.0 and 0.99999, the arm will go up when phase<0.5 and go down otherwise
         if phase < 0.5:
-            self.arm.setPositionGoal(0.875 * IntakeArmConstants.neutralPosition + 0.125 * IntakeArmConstants.stowedPosition)
+            self.arm.setPositionGoal(0.45 * IntakeArmConstants.neutralPosition + 0.55 * IntakeArmConstants.stowedPosition)
         else:
-            self.arm.setPositionGoal(0.75 * IntakeArmConstants.neutralPosition + 0.25 * IntakeArmConstants.stowedPosition)
+            self.arm.setPositionGoal(0.9 * IntakeArmConstants.neutralPosition + 0.1 * IntakeArmConstants.stowedPosition)
