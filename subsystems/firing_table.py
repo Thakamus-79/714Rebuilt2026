@@ -16,11 +16,12 @@ EFFECTIVE_HORIZONTAL_SHOT_DISTANCE = 2.7
 
 # TODO : calibrate this lookup table on a real robot, and add more points
 RECOMMENDED_SHOOTER_RPM_BY_DISTANCE = LookupTable({
-    1.44 : 2375,
-    2.4: 2810,
-    3.04: 2875,
-    3.9 : 3000,
-    6.82 : 3750,  # imagination
+    1.44 : 2250,
+    2.4: 2687.5,
+    3.04: 2750,
+    3.7 : 3000,
+    6.82 : 3700,  # imagination
+    12.00 : 5000,  # extrapolation
 
 
    # if distance is 12m, spin at 6000 rpm
@@ -31,8 +32,8 @@ RECOMMENDED_SHOOTER_HOOD_POSITION_BY_DISTANCE = LookupTable({
     1.44: -0.01,
     2.4: -0.2,
     3.04: -0.4,
-    3.9: -0.5,
-    6.82: -0.8,  # imagination
+    3.7: -0.5,
+    6.82: -0.5,  # imagination
     # if distance is 12m, hood position -0.8 (firing very horizontally)
 })
 

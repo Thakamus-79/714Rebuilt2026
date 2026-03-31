@@ -94,7 +94,7 @@ class RobotContainer:
 
         self.limelightLocalizer = LimelightLocalizer(self.robotDrive)
 
-        self.limelight_shooter = LimelightCamera("limelight-shooter")
+        self.limelight_shooter = PhotonTagCamera("luma-shooter")
         self.limelightLocalizer.addCamera(
             self.limelight_shooter,
             cameraPoseOnRobot=Translation3d(x=-9.75 * 0.0254, y=9.5 * 0.0254, z=16.5 * 0.0254),
@@ -102,7 +102,7 @@ class RobotContainer:
             cameraPitchAngleDegrees=24
         )
 
-        self.limelight_side = LimelightCamera("limelight-side")
+        self.limelight_side = PhotonTagCamera("luma-side")
         self.limelightLocalizer.addCamera(
             self.limelight_side,
             cameraPoseOnRobot=Translation3d(x=-6.5 * 0.0254, y=13.5 * 0.0254, z=16.5 * 0.0254),

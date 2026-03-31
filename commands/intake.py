@@ -7,8 +7,8 @@ from subsystems.intake_arm import Constants as IntakeArmConstants
 
 
 class PickUpConstants:
-    kPickupRollerSpeed = -1550  # rpm
-    kEjectRollerSpeed = +1550  # rpm
+    kPickupRollerSpeed = -2100  # rpm
+    kEjectRollerSpeed = +2100  # rpm
 
 
 class RunIntakeRollersAtIdleSpeed(commands2.Command):
@@ -19,7 +19,7 @@ class RunIntakeRollersAtIdleSpeed(commands2.Command):
 
     def initialize(self):
         self.intake.setVelocityGoal(
-            PickUpConstants.kPickupRollerSpeed * 0.75,  # 0.75 for 714, 0.5 for 8630
+            PickUpConstants.kPickupRollerSpeed * 0.5,  # 0.75 for 714, 0.5 for 8630
             PickUpConstants.kPickupRollerSpeed * 0.1)
 
     def end(self, interrupted: bool):
