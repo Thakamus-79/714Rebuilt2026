@@ -111,6 +111,8 @@ class RobotContainer:
 
         self.pickupCamera = LimelightCamera("limelight-intake")
 
+
+
         # The driver's controller (joystick)
         self.driverController = CommandGenericHID(OIConstants.kDriverControllerPort)
         self.operatorController = CommandGenericHID(OIConstants.kOperatorControllerPort)
@@ -265,6 +267,7 @@ class RobotContainer:
     def configureAutos(self):
         self.chosenAuto = wpilib.SendableChooser()
         # you can also set the default option, if needed
+        self.chosenAuto.setDefaultOption("OverTheHumpLeft",self.createOverTheHumpLeftAuto)
         self.chosenAuto.setDefaultOption("4909 Left",self.createAuto4909Left)
         self.chosenAuto.setDefaultOption("4909 Right",self.createAuto4909Right)
         self.chosenAuto.setDefaultOption("1678 right", self.createAuto1678Right)
@@ -490,7 +493,7 @@ class RobotContainer:
                 (2.907, 7.425, 0),
                 (4.641, 7.425, 0),
                 (6.426, 7.425, 0),
-                (7.992, 6.422,-140),# next waypoint
+                (7.992, 6.422,-140), # next waypoint
 
             ],
             endpoint=(7.759, 4.572, -140),
@@ -514,10 +517,155 @@ class RobotContainer:
                 .andThen(driveAndPickUp)
                 .andThen(driveInReverse).andThen(scoringWhenReady))
 
+
+    def createOverTheHumpLeftAuto(self):
+        setStartPose = ResetXY(x=3.363, y=2.527, headingDegrees=135, drivetrain=self.robotDrive, flipIfRed=True)
+
+        shootFromThere = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+        ).withTimeout(seconds=6.0)
+
+        driveAcrossRamp = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.25,
+            waypoints=[
+                (3.83, 2.527, 135),
+                (5.298, 2.527, 135),
+            ],
+            endpoint=(5.80, 2.527, 0),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=False,  # to keep driving onto next command, set =False
+            swerve=True,
+        )
+
+        pickUp = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.25,
+            waypoints=[
+            ],
+            endpoint=(7.80, 2.527, 0),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=True,  # to keep driving onto next command, set =False
+            swerve=True,
+        ).deadlineFor(PickUp(self.intake, self.intake_arm))
+
+        driveBackToRamp = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.25,
+            waypoints=[
+            ],
+            endpoint=(5.844, 2.527, -45),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=False,  # to keep driving onto next command, set =False
+            swerve=True,
+        )
+
+        driveBackAcrossRamp = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.25,
+            waypoints=[
+                (3.70, 2.527, -45),
+            ],
+            endpoint=(3.30, 2.527, 225),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=True,  # to keep driving onto next command, set =False
+            swerve=True,
+        ).deadlineFor(GetReadyToShoot(
+            firingTable=self.firingTable, shooter=self.shooter, turret=self.turret, drivetrain=None
+        ))
+
+        scoreWhenReady = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+        ).withTimeout(4.0)
+
+        driveWithPinholeTurn = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.25,
+            waypoints=[
+                (3.83, 2.527, 225),
+                (5.298, 2.527, 225),
+            ],
+            endpoint=(6.139, 2.221, -20),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=False,  # to keep driving onto next command, set =False
+            swerve=True,
+        )
+
+        driveWithPinholeTurnIntake = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.25,
+            waypoints=[
+                (6.139, 2.221, -20),
+                (7.101, 1.773, 0),
+                (7.789, 2.527, 90),
+            ],
+            endpoint=(7.101, 3.249, 180),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=False,  # to keep driving onto next command, set =False
+            swerve=True,  # TANK DRIVE, except for the last point
+        ).deadlineFor(PickUp(intakeRollers=self.intake, arm=self.intake_arm))
+
+        driveBackAcrossRamp2 = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.25,
+            waypoints=[
+                (7.101, 3.249, 180),
+                (5.70, 2.527, -45),
+                (3.70, 2.527, -45),
+            ],
+            endpoint = (3.30, 2.527, 225),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=True,  # to keep driving onto next command, set =False
+            swerve=True,
+        ).deadlineFor(GetReadyToShoot(
+            firingTable=self.firingTable, shooter=self.shooter, turret=self.turret, drivetrain=None
+        ))
+
+        scoreWhenReady2 = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+        ).withTimeout(4.0)
+
+        commands = setStartPose.andThen(
+            shootFromThere
+        ).andThen(
+            driveAcrossRamp
+        ).andThen(
+            pickUp
+        ).andThen(
+            driveBackToRamp
+        ).andThen(
+            driveBackAcrossRamp
+        ).andThen(
+            scoreWhenReady
+        ).andThen(
+            driveWithPinholeTurn
+        ).andThen(
+            driveWithPinholeTurnIntake
+        ).andThen(
+            driveBackAcrossRamp2
+        ).andThen(
+            scoreWhenReady2
+        )
+
+        return commands
+
+
     def createAutoCenterToHuman(self):
         setStartPose = ResetXY(x=3.527, y=4.025, headingDegrees=270, drivetrain=self.robotDrive, flipIfRed=True)
 
-        speed = 1
+        speed = 0.33
 
         shootWhenReady = GetReadyAndKeepShooting(
             firingTable=self.firingTable,
@@ -562,7 +710,6 @@ class RobotContainer:
             )
         )
 
-
         commands = setStartPose.andThen(
             shootWhenReady
         ).andThen(
@@ -572,9 +719,6 @@ class RobotContainer:
         )
 
         return commands
-
-
-
 
 
     def getAutonomousTest2Shooting(self):
