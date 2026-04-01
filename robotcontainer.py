@@ -932,4 +932,10 @@ class RobotContainer:
         ).andThen(
             testTurret
         )
-        return command
+
+        return \
+            InstantCommand(lambda: self.limelightLocalizer.setAllowed(False)).andThen(
+                command
+            ).andThen(
+                InstantCommand(lambda: self.limelightLocalizer.setAllowed(True))
+            )
