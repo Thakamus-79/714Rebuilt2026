@@ -65,6 +65,8 @@ class Shooter(Subsystem):
                 ResetMode.kResetSafeParameters,
                 PersistMode.kPersistParameters,
             )
+            self.revLeadMotor.clearFaults()
+            self.revFollowMotor.clearFaults()
             self.revPidController = self.revLeadMotor.getClosedLoopController()
             self.revEncoder = self.revLeadMotor.getEncoder()
 
@@ -75,13 +77,15 @@ class Shooter(Subsystem):
         if motorClass == TalonFX:
             self.talonLeadMotor = TalonFX(ShooterConstants.kShooterMotorA_CANID)
             self.talonFollowMotor = TalonFX(ShooterConstants.kShooterMotorB_CANID)
+            self.talonLeadMotor.clear_sticky_faults()
+            self.talonFollowMotor.clear_sticky_faults()
             leadConfig = TalonFXConfiguration()
             leadConfig.motor_output.neutral_mode = NeutralModeValue.COAST
             leadConfig.motor_output.inverted = InvertedValue.COUNTER_CLOCKWISE_POSITIVE
-            leadConfig.slot0.k_p = ShooterConstants.kP * 0.55
+            leadConfig.slot0.k_p = ShooterConstants.kP * 690.0
             leadConfig.slot0.k_i = 0
             leadConfig.slot0.k_d = 0
-            leadConfig.slot0.k_v = ShooterConstants.kFF * 0.55
+            leadConfig.slot0.k_v = ShooterConstants.kFF * 690.0
             self.talonLeadMotor.configurator.apply(leadConfig)
             self.talonFollowMotor.set_control(Follower(self.talonLeadMotor.device_id, MotorAlignmentValue.OPPOSED))
 
@@ -114,13 +118,13 @@ class Shooter(Subsystem):
         if self.revPidController is not None:
             self.revPidController.setReference(self.velocityGoal * self.inverted, SparkBase.ControlType.kVelocity)
         if self.talonLeadMotor is not None:
-            self.talonLeadMotor.set_control(self.talonControlRequest.with_velocity(self.velocityGoal * self.inverted))
+            self.talonLeadMotor.set_control(self.talonControlRequest.with_velocity(-self.velocityGoal * self.inverted / 60.0))
 
     def getVelocity(self):
         if self.revEncoder is not None:
             return self.revEncoder.getVelocity() * self.inverted
         if self.talonLeadMotor is not None:
-            return self.talonLeadMotor.get_velocity().value * self.inverted
+            return -self.talonLeadMotor.get_velocity().value * self.inverted * 60.0
         return float('nan')
 
     def getVelocityGoal(self):
