@@ -74,7 +74,7 @@ class Shooter(Subsystem):
 
         if motorClass == TalonFX:
             self.talonLeadMotor = TalonFX(ShooterConstants.kShooterMotorA_CANID)
-            self.talonFollowMotor = TalonFX(ShooterConstants.kShooterMotorA_CANID)
+            self.talonFollowMotor = TalonFX(ShooterConstants.kShooterMotorB_CANID)
             leadConfig = TalonFXConfiguration()
             leadConfig.motor_output.neutral_mode = NeutralModeValue.COAST
             leadConfig.motor_output.inverted = InvertedValue.COUNTER_CLOCKWISE_POSITIVE
