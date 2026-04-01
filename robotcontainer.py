@@ -880,32 +880,33 @@ class RobotContainer:
         testGyro = turnRight.andThen(turnLeft).andThen(backToZero)
 
         squareDance = (
-            SwerveToPoint(x= 1, y= 0, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
+            SwerveToPoint(x= 0.5, y= 0, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
         ).andThen(
-            SwerveToPoint( x= 1, y= -1, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
+            SwerveToPoint( x= 0.5, y= -0.5, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
         ).andThen(
-            SwerveToPoint( x= 0, y= -1, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
+            SwerveToPoint( x= 0, y= -0.5, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
         ).andThen(
             SwerveToPoint( x= 0, y= 0, headingDegrees= 0 , speed= 0.15 , drivetrain=self.robotDrive)
         )
 
         testArmIntake = PickUp(intakeRollers=self.intake, arm=self.intake_arm).withTimeout(2)
 
-        startFeeder = InstantCommand(lambda: self.indexer.setFeederVelocityGoal(2000))
-        stopFeeder = InstantCommand(lambda: self.indexer.stop())
-        testFeeder = startFeeder.andThen(WaitCommand(2).andThen(stopFeeder))
-
         startWasher = InstantCommand(lambda: self.indexer.setWashingMachineVelocitySetpoint(0.5))
         stopWasher = InstantCommand(lambda: self.indexer.stop())
         testWasher = startWasher.andThen(WaitCommand(2).andThen(stopWasher))
 
-        startShooter = InstantCommand(lambda: self.shooter.setVelocityGoal(2000, 200))
-        stopShooter = InstantCommand(lambda: self.shooter.stop())
-        testShooter = startShooter.andThen(WaitCommand(2).andThen(stopShooter))
+        startFeeder = InstantCommand(lambda: self.indexer.setFeederVelocityGoal(2000))
+        stopFeeder = InstantCommand(lambda: self.indexer.stop())
+        testFeeder = startFeeder.andThen(WaitCommand(2).andThen(stopFeeder))
 
-        liftHood = InstantCommand(lambda:self.shooter.setHoodServoGoal(1))
-        lowerHood = InstantCommand(lambda:self.shooter.setHoodServoGoal(0))
-        testHood = liftHood.andThen(WaitCommand(2).andThen(lowerHood))
+        unjamFeeder = UnjamFeeder(self.indexer).withTimeout(3.0)
+
+        liftHood1 = InstantCommand(lambda:self.shooter.setHoodServoGoal(-10.0))
+        lowerHood1 = InstantCommand(lambda:self.shooter.setHoodServoGoal(+10.0))
+        liftHood2 = InstantCommand(lambda:self.shooter.setHoodServoGoal(-10.0))
+        lowerHood2 = InstantCommand(lambda:self.shooter.setHoodServoGoal(+10.0))
+        testHood1 = liftHood1.andThen(WaitCommand(1)).andThen(lowerHood1).andThen(WaitCommand(1))
+        testHood2 = liftHood2.andThen(WaitCommand(1)).andThen(lowerHood2).andThen(WaitCommand(1))
 
         turretRight = InstantCommand(lambda:self.turret.setAngleGoal(140))
         turretLeft = InstantCommand(lambda:self.turret.setAngleGoal(220))
@@ -915,6 +916,11 @@ class RobotContainer:
         ).andThen(
             WaitCommand(2).andThen(turretZeroPos)
         )
+
+        startShooter = InstantCommand(lambda: self.shooter.setVelocityGoal(2000, 200))
+        stopShooter = InstantCommand(lambda: self.shooter.stop())
+        testShooter = startShooter.andThen(WaitCommand(2).andThen(stopShooter))
+
         command = setZero.andThen(
             testGyro
         ).andThen(
@@ -926,16 +932,18 @@ class RobotContainer:
         ).andThen(
             testFeeder
         ).andThen(
-            testShooter
-        ).andThen(
-            testHood
+            unjamFeeder
         ).andThen(
             testTurret
+        ).andThen(
+            testHood1.andThen(testHood2)
+        ).andThen(
+            testShooter
         )
 
-        return \
-            InstantCommand(lambda: self.limelightLocalizer.setAllowed(False)).andThen(
-                command
-            ).andThen(
-                InstantCommand(lambda: self.limelightLocalizer.setAllowed(True))
-            )
+        # disable localizer, then run test dance, then enable it back
+        return InstantCommand(lambda: self.limelightLocalizer.setAllowed(False)).andThen(
+            command
+        ).andThen(
+            InstantCommand(lambda: self.limelightLocalizer.setAllowed(True))
+        )
