@@ -39,7 +39,7 @@ class Constants:
 
     # which range of motion we want from this hood?
     minPosition = 0.5  # motor revolutions
-    maxPosition = 18.5  # motor revolutions
+    maxPosition = 19.5  # motor revolutions
     initialPositionGoal = minPosition  # 0.5 * (maxPosition + minPosition)
     positionTolerance = 0.16  # motor revolutions
 
