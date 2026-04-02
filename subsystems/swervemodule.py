@@ -39,6 +39,7 @@ class SwerveModule:
             PersistMode.kPersistParameters)
         self.turningAbsEncoder = self.turningRevMotor.getAbsoluteEncoder()
         self.turningPIDController = self.turningRevMotor.getClosedLoopController()
+        self.turningRevMotor.clearFaults()
 
         # do we have an independent absolute encoder?
         self.cancoder = CANcoder(cancoderCANId) if cancoderCANId >= 0 else None

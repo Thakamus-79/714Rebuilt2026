@@ -33,9 +33,9 @@ class ResetXY(commands2.Command):
         if flip:
             f = AutoConstants.kFieldTags
             point = Translation2d(f.getFieldLength() - self.position.x, f.getFieldWidth() - self.position.y)
-            self.drivetrain.resetOdometry(Pose2d(point, self.position.rotation() + Rotation2d.fromDegrees(180)))
+            self.drivetrain.resetOdometry(Pose2d(point, self.position.rotation() + Rotation2d.fromDegrees(180)), resetGyro=False)
         else:
-            self.drivetrain.resetOdometry(self.position)
+            self.drivetrain.resetOdometry(self.position, resetGyro=False)
 
     def isFinished(self) -> bool:
         return True  # this is an instant command, it finishes right after it initialized

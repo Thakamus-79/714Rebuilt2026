@@ -534,35 +534,30 @@ class RobotContainer:
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
-        ).withTimeout(seconds=4.0)
+        ).deadlineFor(ShakeIntake(self.intake, self.intake_arm)).withTimeout(seconds=4.0)
+
+        def inNeutralZone():
+            return (self.robotDrive.getPose().x - 8.0) < 4.5
 
         driveAcrossRamp = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.70,
+            speed=0.60,
             waypoints=[
                 (3.83, 2.527, 135),
                 (5.298, 2.527, 135),
-            ],
-            endpoint=(5.80, 2.527, 135),
-            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
-            stopAtEnd=False,  # to keep driving onto next command, set =False
-            swerve=True,
-        )
-
-        pickUp = SimpleTrajectory(
-            drivetrain=self.robotDrive,
-            speed=0.4,
-            waypoints=[
+                (5.80, 2.527, 67.5),
             ],
             endpoint=(7.80, 2.527, 0),
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
-            stopAtEnd=True,  # to keep driving onto next command, set =False
+            stopAtEnd=False,  # to keep driving onto next command, set =False
             swerve=True,
-        ).deadlineFor(PickUp(self.intake, self.intake_arm))
+        ).deadlineFor(
+            PickUp(self.intake, self.intake_arm).onlyWhile(inNeutralZone)
+        )
 
         driveBackAcrossRamp = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.70,
+            speed=0.60,
             waypoints=[
                 (5.844, 2.527, -45),
                 (3.70, 2.527, -45),
@@ -581,7 +576,7 @@ class RobotContainer:
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
-        ).withTimeout(4.0)
+        ).deadlineFor(ShakeIntake(self.intake, self.intake_arm)).withTimeout(4.0)
 
         driveWithPinholeTurn = SimpleTrajectory(
             drivetrain=self.robotDrive,
@@ -602,7 +597,7 @@ class RobotContainer:
             waypoints=[
                 (6.139, 2.221, -20),
                 (7.101, 1.773, 0),
-                (7.989, 2.527, 90),
+                (7.889, 2.527, 90),
                 (7.101, 3.249, 180),
             ],
             endpoint=(6.50, 2.257, 90),
@@ -617,36 +612,18 @@ class RobotContainer:
             ))
         )
 
-        driveBackAcrossRamp2 = SimpleTrajectory(
-            drivetrain=self.robotDrive,
-            speed=0.50,
-            waypoints=[
-                (7.101, 3.249, 180),
-                (5.70, 2.527, -45),
-                (3.70, 2.527, -45),
-            ],
-            endpoint = (3.30, 2.527, 225),
-            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
-            stopAtEnd=True,  # to keep driving onto next command, set =False
-            swerve=True,
-        ).deadlineFor(GetReadyToShoot(
-            firingTable=self.firingTable, shooter=self.shooter, turret=self.turret, drivetrain=None
-        ))
-
         scoreWhenReady2 = GetReadyAndKeepShooting(
             firingTable=self.firingTable,
             shooter=self.shooter,
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
-        ).withTimeout(4.0)
+        ).deadlineFor(ShakeIntake(self.intake, self.intake_arm)).withTimeout(4.0)
 
         commands = setStartPose.andThen(
             shootFromThere
         ).andThen(
             driveAcrossRamp
-        ).andThen(
-            pickUp
         ).andThen(
             driveBackAcrossRamp
         ).andThen(
@@ -658,6 +635,10 @@ class RobotContainer:
         ).andThen(
             scoreWhenReady2
         )
+
+#        .andThen(
+#            pickUp
+#        )
 
         return commands
 
@@ -673,7 +654,7 @@ class RobotContainer:
             turret=self.turret,
             drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
             indexer=self.indexer,
-        ).withTimeout(seconds=4.0)
+        ).deadlineFor(ShakeIntake(self.intake, self.intake_arm)).withTimeout(seconds=4.0)
 
         driveTrajectory = SimpleTrajectory(
             drivetrain=self.robotDrive,
