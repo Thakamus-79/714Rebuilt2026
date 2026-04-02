@@ -275,6 +275,7 @@ class RobotContainer:
         self.chosenAuto = wpilib.SendableChooser()
         # you can also set the default option, if needed
         self.chosenAuto.setDefaultOption("OverTheHumpRight", self.createOverTheHumpRightAuto)
+        self.chosenAuto.addOption("OverTheHumpLeft", self.createOverTheHumpLeftAuto)
         # self.chosenAuto.addOption("4909 Left",self.createAuto4909Left)
         # self.chosenAuto.addOption("4909 Right",self.createAuto4909Right)
         # self.chosenAuto.addOption("1678 right", self.createAuto1678Right)
@@ -603,7 +604,7 @@ class RobotContainer:
             endpoint=(6.50, 2.257, 90),
             flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
             stopAtEnd=False,  # to keep driving onto next command, set =False
-            swerve=True,  # TANK DRIVE, except for the last point
+            swerve=True,
         ).deadlineFor(
             PickUp(intakeRollers=self.intake, arm=self.intake_arm)
         ).deadlineFor(
@@ -636,9 +637,119 @@ class RobotContainer:
             scoreWhenReady2
         )
 
-#        .andThen(
-#            pickUp
-#        )
+        return commands
+
+
+    def createOverTheHumpLeftAuto(self):
+        setStartPose = ResetXY(x=3.363, y=8.05 - 2.527, headingDegrees=-135, drivetrain=self.robotDrive, flipIfRed=True)
+
+        shootFromThere = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+        ).deadlineFor(ShakeIntake(self.intake, self.intake_arm)).withTimeout(seconds=4.0)
+
+        def inNeutralZone():
+            return (self.robotDrive.getPose().x - 8.0) < 4.5
+
+        driveAcrossRamp = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.65,
+            waypoints=[
+                (3.83, 8.05 - 2.527, -135),
+                (5.298, 8.05 - 2.527, -135),
+                (5.80, 8.05 - 2.527, -67.5),
+            ],
+            endpoint=(7.80, 8.05 - 2.527, 0),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=False,  # to keep driving onto next command, set =False
+            swerve=True,
+        ).deadlineFor(
+            PickUp(self.intake, self.intake_arm).onlyWhile(inNeutralZone)
+        )
+
+        driveBackAcrossRamp = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.65,
+            waypoints=[
+                (5.844, 8.05 - 2.527, +45),
+                (3.70, 8.05 - 2.527, +45),
+            ],
+            endpoint=(3.30, 8.05 - 2.527, -225),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=True,  # to keep driving onto next command, set =False
+            swerve=True,
+        ).deadlineFor(WaitCommand(1.50).andThen(GetReadyToShoot(
+            firingTable=self.firingTable, shooter=self.shooter, turret=self.turret, drivetrain=None
+        )))
+
+        scoreWhenReady = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+        ).deadlineFor(ShakeIntake(self.intake, self.intake_arm)).withTimeout(4.0)
+
+        driveWithPinholeTurn = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.70,
+            waypoints=[
+                (3.83, 8.05 - 2.527, -225),
+                (5.298, 8.05 - 2.527, -225),
+            ],
+            endpoint=(5.70, 8.05 - 2.221, -225),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=False,  # to keep driving onto next command, set =False
+            swerve=True,
+        )
+
+        driveWithPinholeTurnIntake = SimpleTrajectory(
+            drivetrain=self.robotDrive,
+            speed=0.5,
+            waypoints=[
+                (6.139, 8.05 - 2.221, +20),
+                (7.101, 8.05 - 1.773, 0),
+                (7.889, 8.05 - 2.527, -90),
+                (7.101, 8.05 - 3.249, -180),
+            ],
+            endpoint=(6.50, 8.05 - 2.257, -90),
+            flipIfRed=True,  # if you want the trajectory to flip when team is red, set =True
+            stopAtEnd=False,  # to keep driving onto next command, set =False
+            swerve=True,
+        ).deadlineFor(
+            PickUp(intakeRollers=self.intake, arm=self.intake_arm)
+        ).deadlineFor(
+            WaitCommand(2.0).andThen(GetReadyToShoot(
+                firingTable=self.firingTable, shooter=self.shooter, turret=self.turret, drivetrain=None
+            ))
+        )
+
+        scoreWhenReady2 = GetReadyAndKeepShooting(
+            firingTable=self.firingTable,
+            shooter=self.shooter,
+            turret=self.turret,
+            drivetrain=None,  # if we have a turret (otherwise supply drivetrain=self.robotDrive)
+            indexer=self.indexer,
+        ).deadlineFor(ShakeIntake(self.intake, self.intake_arm)).withTimeout(4.0)
+
+        commands = setStartPose.andThen(
+            shootFromThere
+        ).andThen(
+            driveAcrossRamp
+        ).andThen(
+            driveBackAcrossRamp
+        ).andThen(
+            scoreWhenReady
+        ).andThen(
+            driveWithPinholeTurn
+        ).andThen(
+            driveWithPinholeTurnIntake
+        ).andThen(
+            scoreWhenReady2
+        )
 
         return commands
 
