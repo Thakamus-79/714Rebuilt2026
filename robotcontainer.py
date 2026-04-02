@@ -275,12 +275,12 @@ class RobotContainer:
         self.chosenAuto = wpilib.SendableChooser()
         # you can also set the default option, if needed
         self.chosenAuto.setDefaultOption("OverTheHumpLeft",self.createOverTheHumpLeftAuto)
-        self.chosenAuto.addOption("4909 Left",self.createAuto4909Left)
-        self.chosenAuto.addOption("4909 Right",self.createAuto4909Right)
-        self.chosenAuto.addOption("1678 right", self.createAuto1678Right)
-        self.chosenAuto.addOption("1678 left", self.createAuto1678Left)
+        # self.chosenAuto.addOption("4909 Left",self.createAuto4909Left)
+        # self.chosenAuto.addOption("4909 Right",self.createAuto4909Right)
+        # self.chosenAuto.addOption("1678 right", self.createAuto1678Right)
+        # self.chosenAuto.addOption("1678 left", self.createAuto1678Left)
         self.chosenAuto.addOption("Hub to Human", self.createAutoCenterToHuman)
-        self.chosenAuto.addOption("Test2", self.getAutonomousTest2Shooting)
+        # self.chosenAuto.addOption("Test2", self.getAutonomousTest2Shooting)
         self.chosenAuto.addOption("Depot",self.getAutonmouseDepotintake)
         self.chosenAuto.addOption("PointNorthLeft",self.createPointNorthLeftAuto)
         self.chosenAuto.addOption("PointNorthRight",self.createPointNorthRightAuto)
@@ -541,7 +541,7 @@ class RobotContainer:
 
         driveAcrossRamp = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.60,
+            speed=0.65,
             waypoints=[
                 (3.83, 2.527, 135),
                 (5.298, 2.527, 135),
@@ -557,7 +557,7 @@ class RobotContainer:
 
         driveBackAcrossRamp = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.60,
+            speed=0.65,
             waypoints=[
                 (5.844, 2.527, -45),
                 (3.70, 2.527, -45),
