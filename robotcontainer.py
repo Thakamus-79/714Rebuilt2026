@@ -80,7 +80,7 @@ class RobotContainer:
         self.shooter = Shooter(
             inverted= False,
             hoodServos = [self.hoodServo],
-            motorClass = SparkFlex  # for 714 it's TalonFX, for 8630 it's SparkFlex
+            motorClass = TalonFX  # for 714 it's TalonFX, for 8630 it's SparkFlex
         )
         self.shooter.setDefaultCommand(KeepHoodDown(self.shooter))  # shooter keeps hood down when nothing else to do
 
