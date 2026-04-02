@@ -15,7 +15,7 @@ class ShooterConstants:
     kShooterMotorB_CANID = 40
 
     maxRPM = 5700
-    kFF = 1.68 / 10000  # 18.74 for 714, 1.68 for 8630  # 18.5 for old Vortexes, go figure
+    kFF = 18.75 / 10000  # 18.74 is only one motor works, 1.68 if both motors work
     kP = 8.0 / 10000  # 6.0 for 8630, 8.0 for 714
     kD = 0.0 / 10000
 
