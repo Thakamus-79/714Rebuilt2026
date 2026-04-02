@@ -274,7 +274,7 @@ class RobotContainer:
     def configureAutos(self):
         self.chosenAuto = wpilib.SendableChooser()
         # you can also set the default option, if needed
-        self.chosenAuto.setDefaultOption("OverTheHumpLeft",self.createOverTheHumpLeftAuto)
+        self.chosenAuto.setDefaultOption("OverTheHumpRight", self.createOverTheHumpRightAuto)
         # self.chosenAuto.addOption("4909 Left",self.createAuto4909Left)
         # self.chosenAuto.addOption("4909 Right",self.createAuto4909Right)
         # self.chosenAuto.addOption("1678 right", self.createAuto1678Right)
@@ -525,7 +525,7 @@ class RobotContainer:
                 .andThen(driveInReverse).andThen(scoringWhenReady))
 
 
-    def createOverTheHumpLeftAuto(self):
+    def createOverTheHumpRightAuto(self):
         setStartPose = ResetXY(x=3.363, y=2.527, headingDegrees=135, drivetrain=self.robotDrive, flipIfRed=True)
 
         shootFromThere = GetReadyAndKeepShooting(
