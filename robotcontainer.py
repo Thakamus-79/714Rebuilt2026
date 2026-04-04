@@ -538,7 +538,7 @@ class RobotContainer:
         ).deadlineFor(ShakeIntake(self.intake, self.intake_arm)).withTimeout(seconds=4.0)
 
         def inNeutralZone():
-            return (self.robotDrive.getPose().x - 8.0) < 4.5
+            return (self.robotDrive.getPose().x - 8.0) < 4.8
 
         driveAcrossRamp = SimpleTrajectory(
             drivetrain=self.robotDrive,
@@ -558,7 +558,7 @@ class RobotContainer:
 
         driveBackAcrossRamp = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.65,
+            speed=0.75,
             waypoints=[
                 (5.844, 2.527, -45),
                 (3.70, 2.527, -45),
@@ -652,11 +652,11 @@ class RobotContainer:
         ).deadlineFor(ShakeIntake(self.intake, self.intake_arm)).withTimeout(seconds=4.0)
 
         def inNeutralZone():
-            return (self.robotDrive.getPose().x - 8.0) < 4.5
+            return (self.robotDrive.getPose().x - 8.0) < 4.8
 
         driveAcrossRamp = SimpleTrajectory(
             drivetrain=self.robotDrive,
-            speed=0.65,
+            speed=0.75,
             waypoints=[
                 (3.83, 8.05 - 2.527, -135),
                 (5.298, 8.05 - 2.527, -135),
